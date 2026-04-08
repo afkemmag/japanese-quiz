@@ -65,8 +65,8 @@ const generateOptions = (correct, pool, count = 4) => {
 };
 
 // Ink splatter SVG component
-const InkSplatter = ({ style }) => (
-  <svg viewBox="0 0 200 200" style={{ position: "absolute", opacity: 0.03, pointerEvents: "none", ...style }}>
+const InkSplatter = ({ className }) => (
+  <svg viewBox="0 0 200 200" className={`absolute opacity-[0.03] pointer-events-none ${className}`}>
     <circle cx="100" cy="100" r="80" fill="currentColor" />
     <circle cx="60" cy="50" r="30" fill="currentColor" />
     <circle cx="150" cy="60" r="25" fill="currentColor" />
@@ -74,6 +74,31 @@ const InkSplatter = ({ style }) => (
     <circle cx="50" cy="140" r="20" fill="currentColor" />
   </svg>
 );
+
+const getAnswerBtnClasses = (option, isSelected, isAnswered, correctItem, shakeWrong, mode) => {
+  const isCorrect = option.romaji === correctItem.romaji;
+  const isWrongSelected = isSelected && !isCorrect;
+
+  const base = `rounded-[2px] transition-all duration-200 font-mono ${
+    mode === MODES.ROMAJI_TO_CHAR
+      ? "py-5 px-2 text-[42px] font-serif-jp"
+      : "py-4 px-2 text-base tracking-[2px] font-mono"
+  }`;
+
+  if (!isAnswered) {
+    return `${base} bg-transparent text-kana-text border border-kana-border cursor-pointer`;
+  }
+
+  if (isCorrect) {
+    return `${base} bg-kana-success-dark/[0.08] border border-kana-success-dark text-kana-success cursor-default`;
+  }
+
+  if (isWrongSelected) {
+    return `${base} bg-kana-primary/[0.08] border border-kana-primary text-kana-primary cursor-default ${shakeWrong ? "animate-shake" : ""}`;
+  }
+
+  return `${base} text-kana-faint border border-kana-bg-light cursor-default`;
+};
 
 export default function JapaneseQuiz() {
   const [screen, setScreen] = useState("home");
@@ -169,379 +194,51 @@ export default function JapaneseQuiz() {
   const currentQ = questions[currentIndex];
   const progress = questions.length > 0 ? ((currentIndex + (answered ? 1 : 0)) / questions.length) * 100 : 0;
 
-  const styles = {
-    app: {
-      minHeight: "100vh",
-      background: "#1a1a1e",
-      color: "#e8e4df",
-      fontFamily: "'Noto Serif JP', 'Georgia', serif",
-      position: "relative",
-      overflow: "hidden",
-    },
-    container: {
-      maxWidth: 560,
-      margin: "0 auto",
-      padding: "24px 20px",
-      position: "relative",
-      zIndex: 1,
-    },
-    // Decorative vertical line
-    vertLine: {
-      position: "fixed",
-      top: 0,
-      bottom: 0,
-      width: 1,
-      background: "linear-gradient(to bottom, transparent, #c4443820, transparent)",
-    },
-    // Home screen
-    homeTitle: {
-      fontSize: 14,
-      letterSpacing: 6,
-      textTransform: "uppercase",
-      color: "#c44438",
-      textAlign: "center",
-      marginBottom: 8,
-      fontFamily: "'Courier New', monospace",
-    },
-    heroChar: {
-      fontSize: 120,
-      textAlign: "center",
-      lineHeight: 1,
-      margin: "20px 0",
-      color: "#e8e4df",
-      textShadow: "0 0 60px #c4443830",
-      fontFamily: "'Noto Serif JP', serif",
-    },
-    subtitle: {
-      fontSize: 13,
-      textAlign: "center",
-      color: "#8a857e",
-      marginBottom: 40,
-      letterSpacing: 2,
-    },
-    sectionLabel: {
-      fontSize: 10,
-      letterSpacing: 4,
-      textTransform: "uppercase",
-      color: "#6a655e",
-      marginBottom: 12,
-      fontFamily: "'Courier New', monospace",
-    },
-    optionGroup: {
-      display: "flex",
-      gap: 8,
-      marginBottom: 24,
-    },
-    toggleBtn: (active) => ({
-      flex: 1,
-      padding: "14px 8px",
-      background: active ? "#c44438" : "transparent",
-      color: active ? "#fff" : "#8a857e",
-      border: active ? "1px solid #c44438" : "1px solid #3a3a3e",
-      borderRadius: 2,
-      cursor: "pointer",
-      fontSize: 13,
-      letterSpacing: 1,
-      transition: "all 0.2s",
-      fontFamily: "inherit",
-    }),
-    checkbox: (active) => ({
-      display: "flex",
-      alignItems: "center",
-      gap: 10,
-      padding: "12px 16px",
-      background: active ? "#c4443810" : "transparent",
-      border: active ? "1px solid #c4443840" : "1px solid #3a3a3e",
-      borderRadius: 2,
-      cursor: "pointer",
-      fontSize: 13,
-      color: active ? "#e8e4df" : "#6a655e",
-      transition: "all 0.2s",
-      marginBottom: 8,
-    }),
-    checkMark: (active) => ({
-      width: 18,
-      height: 18,
-      borderRadius: 2,
-      border: active ? "2px solid #c44438" : "2px solid #4a4a4e",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      fontSize: 12,
-      color: "#c44438",
-      flexShrink: 0,
-    }),
-    startBtn: {
-      width: "100%",
-      padding: "18px",
-      background: "#c44438",
-      color: "#fff",
-      border: "none",
-      borderRadius: 2,
-      cursor: "pointer",
-      fontSize: 15,
-      letterSpacing: 3,
-      textTransform: "uppercase",
-      fontFamily: "'Courier New', monospace",
-      marginTop: 16,
-      transition: "all 0.2s",
-    },
-    // Quiz screen
-    topBar: {
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-      marginBottom: 8,
-    },
-    progressTrack: {
-      height: 2,
-      background: "#2a2a2e",
-      borderRadius: 1,
-      marginBottom: 32,
-      overflow: "hidden",
-    },
-    progressFill: {
-      height: "100%",
-      background: "#c44438",
-      transition: "width 0.4s ease",
-      borderRadius: 1,
-    },
-    questionNum: {
-      fontSize: 11,
-      color: "#6a655e",
-      letterSpacing: 3,
-      fontFamily: "'Courier New', monospace",
-    },
-    scoreDisplay: {
-      fontSize: 11,
-      color: "#c44438",
-      letterSpacing: 2,
-      fontFamily: "'Courier New', monospace",
-    },
-    streakBadge: {
-      display: "inline-flex",
-      alignItems: "center",
-      gap: 4,
-      padding: "4px 10px",
-      background: "#c4443820",
-      borderRadius: 2,
-      fontSize: 11,
-      color: "#c44438",
-      fontFamily: "'Courier New', monospace",
-    },
-    questionCard: {
-      textAlign: "center",
-      marginBottom: 40,
-      opacity: fadeIn ? 1 : 0,
-      transform: fadeIn ? "translateY(0)" : "translateY(10px)",
-      transition: "all 0.3s ease",
-    },
-    bigChar: {
-      fontSize: 140,
-      lineHeight: 1,
-      margin: "16px 0 8px",
-      color: "#e8e4df",
-      fontFamily: "'Noto Serif JP', serif",
-    },
-    bigRomaji: {
-      fontSize: 48,
-      lineHeight: 1,
-      margin: "16px 0 8px",
-      color: "#e8e4df",
-      fontFamily: "'Courier New', monospace",
-      letterSpacing: 6,
-      textTransform: "uppercase",
-    },
-    prompt: {
-      fontSize: 12,
-      color: "#6a655e",
-      letterSpacing: 2,
-      fontFamily: "'Courier New', monospace",
-    },
-    answersGrid: {
-      display: "grid",
-      gridTemplateColumns: "1fr 1fr",
-      gap: 10,
-      opacity: fadeIn ? 1 : 0,
-      transition: "opacity 0.3s ease 0.1s",
-    },
-    answerBtn: (option, isSelected, isAnswered, correctItem) => {
-      const isCorrect = option.romaji === correctItem.romaji;
-      const isWrongSelected = isSelected && !isCorrect;
-      let bg = "transparent";
-      let border = "1px solid #3a3a3e";
-      let color = "#e8e4df";
-
-      if (isAnswered) {
-        if (isCorrect) {
-          bg = "#2d6a4f15";
-          border = "1px solid #2d6a4f";
-          color = "#52b788";
-        } else if (isWrongSelected) {
-          bg = "#c4443815";
-          border = "1px solid #c44438";
-          color = "#c44438";
-        } else {
-          color = "#4a4a4e";
-          border = "1px solid #2a2a2e";
-        }
-      }
-
-      return {
-        padding: mode === MODES.ROMAJI_TO_CHAR ? "20px 8px" : "16px 8px",
-        background: bg,
-        color,
-        border,
-        borderRadius: 2,
-        cursor: isAnswered ? "default" : "pointer",
-        fontSize: mode === MODES.ROMAJI_TO_CHAR ? 42 : 16,
-        fontFamily: mode === MODES.ROMAJI_TO_CHAR ? "'Noto Serif JP', serif" : "'Courier New', monospace",
-        letterSpacing: mode === MODES.ROMAJI_TO_CHAR ? 0 : 2,
-        transition: "all 0.2s",
-        animation: isWrongSelected && shakeWrong ? "shake 0.4s ease" : "none",
-      };
-    },
-    nextBtn: {
-      width: "100%",
-      padding: "16px",
-      background: "transparent",
-      color: "#c44438",
-      border: "1px solid #c44438",
-      borderRadius: 2,
-      cursor: "pointer",
-      fontSize: 12,
-      letterSpacing: 4,
-      textTransform: "uppercase",
-      fontFamily: "'Courier New', monospace",
-      marginTop: 20,
-      transition: "all 0.2s",
-    },
-    // Results
-    resultScore: {
-      fontSize: 72,
-      textAlign: "center",
-      color: "#c44438",
-      fontFamily: "'Courier New', monospace",
-      lineHeight: 1,
-      margin: "20px 0 4px",
-    },
-    resultLabel: {
-      fontSize: 12,
-      textAlign: "center",
-      color: "#6a655e",
-      letterSpacing: 3,
-      fontFamily: "'Courier New', monospace",
-      marginBottom: 32,
-    },
-    statsRow: {
-      display: "flex",
-      justifyContent: "center",
-      gap: 32,
-      marginBottom: 32,
-    },
-    stat: {
-      textAlign: "center",
-    },
-    statValue: {
-      fontSize: 24,
-      color: "#e8e4df",
-      fontFamily: "'Courier New', monospace",
-    },
-    statLabel: {
-      fontSize: 10,
-      color: "#6a655e",
-      letterSpacing: 2,
-      fontFamily: "'Courier New', monospace",
-      marginTop: 4,
-    },
-    reviewItem: (correct) => ({
-      display: "flex",
-      alignItems: "center",
-      padding: "12px 16px",
-      borderBottom: "1px solid #2a2a2e",
-      gap: 16,
-    }),
-    reviewChar: {
-      fontSize: 28,
-      width: 48,
-      textAlign: "center",
-      fontFamily: "'Noto Serif JP', serif",
-    },
-    reviewRomaji: {
-      fontSize: 14,
-      fontFamily: "'Courier New', monospace",
-      letterSpacing: 2,
-      color: "#8a857e",
-      flex: 1,
-    },
-    reviewIcon: (correct) => ({
-      fontSize: 14,
-      color: correct ? "#52b788" : "#c44438",
-      fontFamily: "'Courier New', monospace",
-    }),
-    backBtn: {
-      background: "none",
-      border: "none",
-      color: "#6a655e",
-      cursor: "pointer",
-      fontSize: 12,
-      letterSpacing: 2,
-      fontFamily: "'Courier New', monospace",
-      padding: "8px 0",
-    },
-  };
-
   return (
-    <div style={styles.app}>
+    <div className="min-h-screen bg-kana-bg text-kana-text font-serif-jp relative overflow-hidden">
       <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700&display=swap" rel="stylesheet" />
-      <style>{`
-        @keyframes shake {
-          0%, 100% { transform: translateX(0); }
-          25% { transform: translateX(-6px); }
-          75% { transform: translateX(6px); }
-        }
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        button:hover { filter: brightness(1.15); }
-        * { box-sizing: border-box; }
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #3a3a3e; border-radius: 2px; }
-      `}</style>
 
       {/* Decorative lines */}
-      <div style={{ ...styles.vertLine, left: "10%" }} />
-      <div style={{ ...styles.vertLine, right: "10%" }} />
+      <div className="vert-line left-[10%]" />
+      <div className="vert-line right-[10%]" />
 
-      <InkSplatter style={{ top: -40, right: -60, width: 300, color: "#c44438" }} />
-      <InkSplatter style={{ bottom: -20, left: -40, width: 250, color: "#e8e4df" }} />
+      <InkSplatter className="-top-10 -right-15 w-[300px] text-kana-primary" />
+      <InkSplatter className="-bottom-5 -left-10 w-[250px] text-kana-text" />
 
-      <div style={styles.container}>
+      <div className="max-w-[560px] mx-auto px-5 py-6 relative z-10">
         {/* ─── HOME ─── */}
         {screen === "home" && (
-          <div style={{ animation: "fadeUp 0.5s ease" }}>
-            <div style={{ height: 20 }} />
-            <div style={styles.homeTitle}>日本語 Practice</div>
-            <div style={styles.heroChar}>
+          <div className="animate-fade-up">
+            <div className="h-5" />
+            <div className="text-sm tracking-[6px] uppercase text-kana-primary text-center mb-2 font-mono">
+              日本語 Practice
+            </div>
+            <div className="text-[120px] text-center leading-none my-5 text-kana-text font-serif-jp" style={{ textShadow: "0 0 60px #c4443830" }}>
               {scriptType === "hiragana" ? "あ" : "ア"}
             </div>
-            <div style={styles.subtitle}>
+            <div className="text-[13px] text-center text-kana-muted mb-10 tracking-[2px]">
               JAPANESE KANA QUIZ
             </div>
 
             {/* Script selection */}
-            <div style={styles.sectionLabel}>Script</div>
-            <div style={styles.optionGroup}>
+            <div className="text-[10px] tracking-[4px] uppercase text-kana-dim mb-3 font-mono">Script</div>
+            <div className="flex gap-2 mb-6">
               <button
-                style={styles.toggleBtn(scriptType === "hiragana")}
+                className={`flex-1 py-3.5 px-2 rounded-[2px] text-[13px] tracking-[1px] transition-all duration-200 font-inherit border ${
+                  scriptType === "hiragana"
+                    ? "bg-kana-primary text-white border-kana-primary"
+                    : "bg-transparent text-kana-muted border-kana-border"
+                }`}
                 onClick={() => setScriptType("hiragana")}
               >
                 ひらがな Hiragana
               </button>
               <button
-                style={styles.toggleBtn(scriptType === "katakana")}
+                className={`flex-1 py-3.5 px-2 rounded-[2px] text-[13px] tracking-[1px] transition-all duration-200 font-inherit border ${
+                  scriptType === "katakana"
+                    ? "bg-kana-primary text-white border-kana-primary"
+                    : "bg-transparent text-kana-muted border-kana-border"
+                }`}
                 onClick={() => setScriptType("katakana")}
               >
                 カタカナ Katakana
@@ -549,16 +246,24 @@ export default function JapaneseQuiz() {
             </div>
 
             {/* Mode selection */}
-            <div style={styles.sectionLabel}>Quiz Mode</div>
-            <div style={styles.optionGroup}>
+            <div className="text-[10px] tracking-[4px] uppercase text-kana-dim mb-3 font-mono">Quiz Mode</div>
+            <div className="flex gap-2 mb-6">
               <button
-                style={styles.toggleBtn(mode === MODES.CHAR_TO_ROMAJI)}
+                className={`flex-1 py-3.5 px-2 rounded-[2px] text-[13px] tracking-[1px] transition-all duration-200 font-inherit border ${
+                  mode === MODES.CHAR_TO_ROMAJI
+                    ? "bg-kana-primary text-white border-kana-primary"
+                    : "bg-transparent text-kana-muted border-kana-border"
+                }`}
                 onClick={() => setMode(MODES.CHAR_TO_ROMAJI)}
               >
                 あ → Romaji
               </button>
               <button
-                style={styles.toggleBtn(mode === MODES.ROMAJI_TO_CHAR)}
+                className={`flex-1 py-3.5 px-2 rounded-[2px] text-[13px] tracking-[1px] transition-all duration-200 font-inherit border ${
+                  mode === MODES.ROMAJI_TO_CHAR
+                    ? "bg-kana-primary text-white border-kana-primary"
+                    : "bg-transparent text-kana-muted border-kana-border"
+                }`}
                 onClick={() => setMode(MODES.ROMAJI_TO_CHAR)}
               >
                 Romaji → あ
@@ -566,37 +271,52 @@ export default function JapaneseQuiz() {
             </div>
 
             {/* Character sets */}
-            <div style={styles.sectionLabel}>Characters</div>
+            <div className="text-[10px] tracking-[4px] uppercase text-kana-dim mb-3 font-mono">Characters</div>
             <div
-              style={styles.checkbox(includeBasic)}
+              className={`flex items-center gap-2.5 py-3 px-4 rounded-[2px] cursor-pointer text-[13px] transition-all duration-200 mb-2 border ${
+                includeBasic
+                  ? "bg-kana-primary/[0.06] border-kana-primary/25 text-kana-text"
+                  : "bg-transparent border-kana-border text-kana-dim"
+              }`}
               onClick={() => {
                 if (!includeBasic && !includeDakuten) return;
                 setIncludeBasic(!includeBasic);
               }}
             >
-              <div style={styles.checkMark(includeBasic)}>
+              <div className={`w-[18px] h-[18px] rounded-[2px] flex items-center justify-center text-xs text-kana-primary shrink-0 border-2 ${
+                includeBasic ? "border-kana-primary" : "border-kana-border-light"
+              }`}>
                 {includeBasic && "✓"}
               </div>
               <span>Basic (46 characters)</span>
             </div>
             <div
-              style={styles.checkbox(includeDakuten)}
+              className={`flex items-center gap-2.5 py-3 px-4 rounded-[2px] cursor-pointer text-[13px] transition-all duration-200 mb-2 border ${
+                includeDakuten
+                  ? "bg-kana-primary/[0.06] border-kana-primary/25 text-kana-text"
+                  : "bg-transparent border-kana-border text-kana-dim"
+              }`}
               onClick={() => {
                 if (!includeDakuten && !includeBasic) return;
                 setIncludeDakuten(!includeDakuten);
               }}
             >
-              <div style={styles.checkMark(includeDakuten)}>
+              <div className={`w-[18px] h-[18px] rounded-[2px] flex items-center justify-center text-xs text-kana-primary shrink-0 border-2 ${
+                includeDakuten ? "border-kana-primary" : "border-kana-border-light"
+              }`}>
                 {includeDakuten && "✓"}
               </div>
               <span>Dakuten / Handakuten (25 characters)</span>
             </div>
 
-            <button style={styles.startBtn} onClick={startQuiz}>
+            <button
+              className="w-full py-[18px] bg-kana-primary text-white border-none rounded-[2px] cursor-pointer text-[15px] tracking-[3px] uppercase font-mono mt-4 transition-all duration-200"
+              onClick={startQuiz}
+            >
               Begin Quiz
             </button>
 
-            <div style={{ textAlign: "center", marginTop: 20, fontSize: 11, color: "#4a4a4e", letterSpacing: 1, fontFamily: "'Courier New', monospace" }}>
+            <div className="text-center mt-5 text-[11px] text-kana-faint tracking-[1px] font-mono">
               {TOTAL_QUESTIONS} questions · multiple choice
             </div>
           </div>
@@ -605,47 +325,57 @@ export default function JapaneseQuiz() {
         {/* ─── QUIZ ─── */}
         {screen === "quiz" && currentQ && (
           <div>
-            <div style={styles.topBar}>
-              <button style={styles.backBtn} onClick={() => setScreen("home")}>
+            <div className="flex justify-between items-center mb-2">
+              <button
+                className="bg-none border-none text-kana-dim cursor-pointer text-xs tracking-[2px] font-mono py-2"
+                onClick={() => setScreen("home")}
+              >
                 ← BACK
               </button>
-              <span style={styles.questionNum}>
+              <span className="text-[11px] text-kana-dim tracking-[3px] font-mono">
                 {currentIndex + 1} / {questions.length}
               </span>
-              <span style={styles.scoreDisplay}>
+              <span className="text-[11px] text-kana-primary tracking-[2px] font-mono">
                 {score} correct
               </span>
             </div>
-            <div style={styles.progressTrack}>
-              <div style={{ ...styles.progressFill, width: `${progress}%` }} />
+            <div className="h-0.5 bg-kana-bg-light rounded-[1px] mb-8 overflow-hidden">
+              <div
+                className="h-full bg-kana-primary transition-[width] duration-400 ease rounded-[1px]"
+                style={{ width: `${progress}%` }}
+              />
             </div>
 
             {streak >= 3 && (
-              <div style={{ textAlign: "center", marginBottom: 16 }}>
-                <span style={styles.streakBadge}>
+              <div className="text-center mb-4">
+                <span className="inline-flex items-center gap-1 py-1 px-2.5 bg-kana-primary/[0.13] rounded-[2px] text-[11px] text-kana-primary font-mono">
                   🔥 {streak} streak
                 </span>
               </div>
             )}
 
-            <div style={styles.questionCard}>
-              <div style={styles.prompt}>
+            <div className={`text-center mb-10 transition-all duration-300 ${fadeIn ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2.5"}`}>
+              <div className="text-xs text-kana-dim tracking-[2px] font-mono">
                 {mode === MODES.CHAR_TO_ROMAJI
                   ? "What is the romaji for"
                   : "Which character is"}
               </div>
               {mode === MODES.CHAR_TO_ROMAJI ? (
-                <div style={styles.bigChar}>{currentQ.item.char}</div>
+                <div className="text-[140px] leading-none mt-4 mb-2 text-kana-text font-serif-jp">
+                  {currentQ.item.char}
+                </div>
               ) : (
-                <div style={styles.bigRomaji}>{currentQ.item.romaji}</div>
+                <div className="text-5xl leading-none mt-4 mb-2 text-kana-text font-mono tracking-[6px] uppercase">
+                  {currentQ.item.romaji}
+                </div>
               )}
             </div>
 
-            <div style={styles.answersGrid}>
+            <div className={`grid grid-cols-2 gap-2.5 transition-opacity duration-300 delay-100 ${fadeIn ? "opacity-100" : "opacity-0"}`}>
               {currentQ.options.map((opt, i) => (
                 <button
                   key={i}
-                  style={styles.answerBtn(opt, selected?.romaji === opt.romaji && selected?.char === opt.char, answered, currentQ.item)}
+                  className={getAnswerBtnClasses(opt, selected?.romaji === opt.romaji && selected?.char === opt.char, answered, currentQ.item, shakeWrong, mode)}
                   onClick={() => handleSelect(opt)}
                 >
                   {mode === MODES.CHAR_TO_ROMAJI ? opt.romaji : opt.char}
@@ -654,15 +384,18 @@ export default function JapaneseQuiz() {
             </div>
 
             {answered && (
-              <div style={{ animation: "fadeUp 0.2s ease" }}>
+              <div className="animate-fade-up-fast">
                 {selected?.romaji !== currentQ.item.romaji && (
-                  <div style={{ textAlign: "center", marginTop: 16, fontSize: 13, color: "#8a857e" }}>
-                    Correct answer: <span style={{ color: "#52b788" }}>
+                  <div className="text-center mt-4 text-[13px] text-kana-muted">
+                    Correct answer: <span className="text-kana-success">
                       {currentQ.item.char} = {currentQ.item.romaji}
                     </span>
                   </div>
                 )}
-                <button style={styles.nextBtn} onClick={nextQuestion}>
+                <button
+                  className="w-full py-4 bg-transparent text-kana-primary border border-kana-primary rounded-[2px] cursor-pointer text-xs tracking-[4px] uppercase font-mono mt-5 transition-all duration-200"
+                  onClick={nextQuestion}
+                >
                   {currentIndex + 1 >= questions.length ? "See Results" : "Next →"}
                 </button>
               </div>
@@ -672,53 +405,55 @@ export default function JapaneseQuiz() {
 
         {/* ─── RESULTS ─── */}
         {screen === "results" && (
-          <div style={{ animation: "fadeUp 0.5s ease" }}>
-            <div style={{ height: 20 }} />
-            <div style={styles.homeTitle}>Complete</div>
-            <div style={styles.resultScore}>
+          <div className="animate-fade-up">
+            <div className="h-5" />
+            <div className="text-sm tracking-[6px] uppercase text-kana-primary text-center mb-2 font-mono">
+              Complete
+            </div>
+            <div className="text-7xl text-center text-kana-primary font-mono leading-none mt-5 mb-1">
               {Math.round((score / questions.length) * 100)}%
             </div>
-            <div style={styles.resultLabel}>
+            <div className="text-xs text-center text-kana-dim tracking-[3px] font-mono mb-8">
               {score} / {questions.length} CORRECT
             </div>
 
-            <div style={styles.statsRow}>
-              <div style={styles.stat}>
-                <div style={styles.statValue}>{bestStreak}</div>
-                <div style={styles.statLabel}>BEST STREAK</div>
+            <div className="flex justify-center gap-8 mb-8">
+              <div className="text-center">
+                <div className="text-2xl text-kana-text font-mono">{bestStreak}</div>
+                <div className="text-[10px] text-kana-dim tracking-[2px] font-mono mt-1">BEST STREAK</div>
               </div>
-              <div style={styles.stat}>
-                <div style={styles.statValue}>
+              <div className="text-center">
+                <div className="text-2xl text-kana-text font-mono">
                   {score >= questions.length * 0.9 ? "素晴らしい" : score >= questions.length * 0.7 ? "いいね" : "頑張って"}
                 </div>
-                <div style={styles.statLabel}>
+                <div className="text-[10px] text-kana-dim tracking-[2px] font-mono mt-1">
                   {score >= questions.length * 0.9 ? "WONDERFUL" : score >= questions.length * 0.7 ? "NICE" : "KEEP GOING"}
                 </div>
               </div>
             </div>
 
-            <div style={styles.sectionLabel}>Review</div>
-            <div style={{ border: "1px solid #2a2a2e", borderRadius: 2, marginBottom: 24 }}>
+            <div className="text-[10px] tracking-[4px] uppercase text-kana-dim mb-3 font-mono">Review</div>
+            <div className="border border-kana-bg-light rounded-[2px] mb-6">
               {history.map((h, i) => (
-                <div key={i} style={styles.reviewItem(h.correct)}>
-                  <div style={styles.reviewChar}>{h.item.char}</div>
-                  <div style={styles.reviewRomaji}>{h.item.romaji}</div>
-                  <div style={styles.reviewIcon(h.correct)}>
+                <div key={i} className="flex items-center py-3 px-4 border-b border-kana-bg-light gap-4">
+                  <div className="text-[28px] w-12 text-center font-serif-jp">{h.item.char}</div>
+                  <div className="text-sm font-mono tracking-[2px] text-kana-muted flex-1">{h.item.romaji}</div>
+                  <div className={`text-sm font-mono ${h.correct ? "text-kana-success" : "text-kana-primary"}`}>
                     {h.correct ? "✓" : `✗ ${h.selected.romaji}`}
                   </div>
                 </div>
               ))}
             </div>
 
-            <div style={{ display: "flex", gap: 10 }}>
+            <div className="flex gap-2.5">
               <button
-                style={{ ...styles.nextBtn, flex: 1 }}
+                className="flex-1 py-4 bg-transparent text-kana-primary border border-kana-primary rounded-[2px] cursor-pointer text-xs tracking-[4px] uppercase font-mono transition-all duration-200"
                 onClick={() => setScreen("home")}
               >
                 Menu
               </button>
               <button
-                style={{ ...styles.startBtn, flex: 1, marginTop: 0 }}
+                className="flex-1 py-[18px] bg-kana-primary text-white border-none rounded-[2px] cursor-pointer text-[15px] tracking-[3px] uppercase font-mono transition-all duration-200"
                 onClick={startQuiz}
               >
                 Retry
