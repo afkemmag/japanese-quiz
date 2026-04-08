@@ -118,6 +118,12 @@ export default function JapaneseQuiz() {
   const [fadeIn, setFadeIn] = useState(true);
   const inputRef = useRef(null);
 
+  // Practice mode (Anki-style)
+  const [practiceDeck, setPracticeDeck] = useState([]);
+  const [practiceRevealed, setPracticeRevealed] = useState(false);
+  const [practiceCount, setPracticeCount] = useState(0);
+  const [practiceFade, setPracticeFade] = useState(true);
+
   const TOTAL_QUESTIONS = 15;
 
   const getPool = useCallback(() => {
@@ -130,6 +136,50 @@ export default function JapaneseQuiz() {
     if (pool.length === 0) pool = basic;
     return pool;
   }, [scriptType, includeBasic, includeDakuten]);
+
+  const startPractice = () => {
+    const pool = getPool();
+    // Each card gets a weight: higher = more likely to appear next
+    const deck = shuffle(pool).map((item) => ({ ...item, weight: 1 }));
+    setPracticeDeck(deck);
+    setPracticeRevealed(false);
+    setPracticeCount(0);
+    setPracticeFade(true);
+    setScreen("practice");
+  };
+
+  const pickNextCard = (deck) => {
+    // Weighted random pick: cards rated "hard" appear more often
+    const totalWeight = deck.reduce((sum, c) => sum + c.weight, 0);
+    let r = Math.random() * totalWeight;
+    for (const card of deck) {
+      r -= card.weight;
+      if (r <= 0) return card;
+    }
+    return deck[0];
+  };
+
+  const ratePractice = (difficulty) => {
+    setPracticeFade(false);
+    const current = practiceDeck[0];
+    setTimeout(() => {
+      setPracticeDeck((prev) => {
+        const updated = prev.map((c) => {
+          if (c.char !== current.char) return c;
+          if (difficulty === "easy") return { ...c, weight: Math.max(0.2, c.weight * 0.5) };
+          if (difficulty === "hard") return { ...c, weight: Math.min(5, c.weight * 2) };
+          return c; // medium keeps weight the same
+        });
+        // Move the next weighted pick to front
+        const next = pickNextCard(updated);
+        const rest = updated.filter((c) => c.char !== next.char);
+        return [next, ...rest];
+      });
+      setPracticeRevealed(false);
+      setPracticeCount((c) => c + 1);
+      setPracticeFade(true);
+    }, 150);
+  };
 
   const startQuiz = () => {
     const pool = getPool();
@@ -315,6 +365,30 @@ export default function JapaneseQuiz() {
               Begin Quiz
             </button>
 
+            <button
+              className={`w-full py-[18px] border rounded-[2px] text-[15px] tracking-[3px] uppercase font-mono mt-2.5 transition-all duration-200 ${
+                includeBasic || includeDakuten
+                  ? "bg-transparent text-kana-primary border-kana-primary cursor-pointer"
+                  : "bg-transparent text-kana-dim border-kana-border cursor-not-allowed"
+              }`}
+              disabled={!includeBasic && !includeDakuten}
+              onClick={startPractice}
+            >
+              Practice Mode
+            </button>
+
+            <button
+              className={`w-full py-3.5 border rounded-[2px] text-[13px] tracking-[3px] uppercase font-mono mt-2.5 transition-all duration-200 ${
+                includeBasic || includeDakuten
+                  ? "bg-transparent text-kana-muted border-kana-border cursor-pointer"
+                  : "bg-transparent text-kana-dim border-kana-border cursor-not-allowed"
+              }`}
+              disabled={!includeBasic && !includeDakuten}
+              onClick={() => setScreen("reference")}
+            >
+              Reference
+            </button>
+
             <div className="text-center mt-5 text-[11px] text-kana-faint tracking-[1px] font-mono">
               {TOTAL_QUESTIONS} questions · multiple choice
             </div>
@@ -399,6 +473,140 @@ export default function JapaneseQuiz() {
                 </button>
               </div>
             )}
+          </div>
+        )}
+
+        {/* ─── PRACTICE (Anki-style) ─── */}
+        {screen === "practice" && practiceDeck.length > 0 && (
+          <div>
+            <div className="flex justify-between items-center mb-2">
+              <button
+                className="bg-none border-none text-kana-dim cursor-pointer text-xs tracking-[2px] font-mono py-2"
+                onClick={() => setScreen("home")}
+              >
+                ← BACK
+              </button>
+              <span className="text-[11px] text-kana-primary tracking-[3px] font-mono uppercase">
+                Practice
+              </span>
+              <span className="text-[11px] text-kana-dim tracking-[2px] font-mono">
+                {practiceCount} reviewed
+              </span>
+            </div>
+
+            <div className={`transition-all duration-300 ${practiceFade ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2.5"}`}>
+              {/* Card */}
+              <div
+                className="mt-8 mb-6 border border-kana-border rounded-[2px] cursor-pointer select-none text-center"
+                onClick={() => setPracticeRevealed(true)}
+              >
+                <div className="py-10">
+                  <div className="text-[10px] tracking-[4px] uppercase text-kana-dim mb-2 font-mono">
+                    {practiceRevealed ? "Answer" : "Tap to reveal"}
+                  </div>
+                  <div className="text-[120px] leading-none text-kana-text font-serif-jp">
+                    {practiceDeck[0].char}
+                  </div>
+                </div>
+
+                <div className={`border-t border-kana-border py-6 transition-all duration-200 ${practiceRevealed ? "opacity-100" : "opacity-0"}`}>
+                  <div className="text-3xl font-mono tracking-[6px] text-kana-text uppercase">
+                    {practiceDeck[0].romaji}
+                  </div>
+                </div>
+              </div>
+
+              {/* Difficulty buttons */}
+              {practiceRevealed && (
+                <div className="animate-fade-up-fast">
+                  <div className="text-[10px] tracking-[4px] uppercase text-kana-dim mb-3 font-mono text-center">
+                    How well did you know it?
+                  </div>
+                  <div className="grid grid-cols-3 gap-2.5">
+                    <button
+                      className="py-4 rounded-[2px] border border-kana-primary bg-kana-primary/[0.08] text-kana-primary text-xs tracking-[3px] uppercase font-mono cursor-pointer transition-all duration-200"
+                      onClick={() => ratePractice("hard")}
+                    >
+                      Hard
+                    </button>
+                    <button
+                      className="py-4 rounded-[2px] border border-kana-border bg-transparent text-kana-muted text-xs tracking-[3px] uppercase font-mono cursor-pointer transition-all duration-200"
+                      onClick={() => ratePractice("medium")}
+                    >
+                      Medium
+                    </button>
+                    <button
+                      className="py-4 rounded-[2px] border border-kana-success-dark bg-kana-success-dark/[0.08] text-kana-success text-xs tracking-[3px] uppercase font-mono cursor-pointer transition-all duration-200"
+                      onClick={() => ratePractice("easy")}
+                    >
+                      Easy
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ─── REFERENCE ─── */}
+        {screen === "reference" && (
+          <div className="animate-fade-up">
+            <div className="flex justify-between items-center mb-6">
+              <button
+                className="bg-none border-none text-kana-dim cursor-pointer text-xs tracking-[2px] font-mono py-2"
+                onClick={() => setScreen("home")}
+              >
+                ← BACK
+              </button>
+              <span className="text-[11px] text-kana-primary tracking-[3px] font-mono uppercase">
+                {scriptType === "hiragana" ? "ひらがな" : "カタカナ"} Reference
+              </span>
+            </div>
+
+            {includeBasic && (
+              <>
+                <div className="text-[10px] tracking-[4px] uppercase text-kana-dim mb-3 font-mono">
+                  Basic Characters
+                </div>
+                <div className="grid grid-cols-5 gap-1.5 mb-6">
+                  {(scriptType === "hiragana" ? HIRAGANA : KATAKANA).slice(0, 46).map((item, i) => (
+                    <div
+                      key={i}
+                      className="flex flex-col items-center py-3 px-1 rounded-[2px] border border-kana-border bg-kana-bg-light/30"
+                    >
+                      <div className="text-[28px] font-serif-jp leading-none mb-1.5">{item.char}</div>
+                      <div className="text-[11px] font-mono text-kana-muted tracking-[1px]">{item.romaji}</div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {includeDakuten && (
+              <>
+                <div className="text-[10px] tracking-[4px] uppercase text-kana-dim mb-3 font-mono">
+                  Dakuten / Handakuten
+                </div>
+                <div className="grid grid-cols-5 gap-1.5 mb-6">
+                  {(scriptType === "hiragana" ? HIRAGANA : KATAKANA).slice(46).map((item, i) => (
+                    <div
+                      key={i}
+                      className="flex flex-col items-center py-3 px-1 rounded-[2px] border border-kana-border bg-kana-bg-light/30"
+                    >
+                      <div className="text-[28px] font-serif-jp leading-none mb-1.5">{item.char}</div>
+                      <div className="text-[11px] font-mono text-kana-muted tracking-[1px]">{item.romaji}</div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+
+            <button
+              className="w-full py-[18px] bg-kana-primary text-white border-none rounded-[2px] text-[15px] tracking-[3px] uppercase font-mono transition-all duration-200 cursor-pointer"
+              onClick={startQuiz}
+            >
+              Start Quiz
+            </button>
           </div>
         )}
 
