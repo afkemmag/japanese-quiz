@@ -278,10 +278,7 @@ export default function JapaneseQuiz() {
                   ? "bg-kana-primary/[0.06] border-kana-primary/25 text-kana-text"
                   : "bg-transparent border-kana-border text-kana-dim"
               }`}
-              onClick={() => {
-                if (!includeBasic && !includeDakuten) return;
-                setIncludeBasic(!includeBasic);
-              }}
+              onClick={() => setIncludeBasic(!includeBasic)}
             >
               <div className={`w-[18px] h-[18px] rounded-[2px] flex items-center justify-center text-xs text-kana-primary shrink-0 border-2 ${
                 includeBasic ? "border-kana-primary" : "border-kana-border-light"
@@ -296,10 +293,7 @@ export default function JapaneseQuiz() {
                   ? "bg-kana-primary/[0.06] border-kana-primary/25 text-kana-text"
                   : "bg-transparent border-kana-border text-kana-dim"
               }`}
-              onClick={() => {
-                if (!includeDakuten && !includeBasic) return;
-                setIncludeDakuten(!includeDakuten);
-              }}
+              onClick={() => setIncludeDakuten(!includeDakuten)}
             >
               <div className={`w-[18px] h-[18px] rounded-[2px] flex items-center justify-center text-xs text-kana-primary shrink-0 border-2 ${
                 includeDakuten ? "border-kana-primary" : "border-kana-border-light"
@@ -310,7 +304,12 @@ export default function JapaneseQuiz() {
             </div>
 
             <button
-              className="w-full py-[18px] bg-kana-primary text-white border-none rounded-[2px] cursor-pointer text-[15px] tracking-[3px] uppercase font-mono mt-4 transition-all duration-200"
+              className={`w-full py-[18px] border-none rounded-[2px] text-[15px] tracking-[3px] uppercase font-mono mt-4 transition-all duration-200 ${
+                includeBasic || includeDakuten
+                  ? "bg-kana-primary text-white cursor-pointer"
+                  : "bg-kana-bg-light text-kana-dim cursor-not-allowed"
+              }`}
+              disabled={!includeBasic && !includeDakuten}
               onClick={startQuiz}
             >
               Begin Quiz
