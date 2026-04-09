@@ -124,6 +124,9 @@ export default function JapaneseQuiz() {
   const [practiceCount, setPracticeCount] = useState(0);
   const [practiceFade, setPracticeFade] = useState(true);
 
+  // Reference overlay
+  const [refOverlay, setRefOverlay] = useState(null);
+
   const TOTAL_QUESTIONS = 15;
 
   const getPool = useCallback(() => {
@@ -509,7 +512,7 @@ export default function JapaneseQuiz() {
                   </div>
                 </div>
 
-                <div className={`border-t border-kana-border py-6 transition-all duration-200 ${practiceRevealed ? "opacity-100" : "opacity-0"}`}>
+                <div className={`border-t border-kana-border py-6 ${practiceRevealed ? "opacity-100 transition-all duration-200" : "opacity-0"}`}>
                   <div className="text-3xl font-mono tracking-[6px] text-kana-text uppercase">
                     {practiceDeck[0].romaji}
                   </div>
@@ -572,7 +575,8 @@ export default function JapaneseQuiz() {
                   {(scriptType === "hiragana" ? HIRAGANA : KATAKANA).slice(0, 46).map((item, i) => (
                     <div
                       key={i}
-                      className="flex flex-col items-center py-3 px-1 rounded-[2px] border border-kana-border bg-kana-bg-light/30"
+                      className="flex flex-col items-center py-3 px-1 rounded-[2px] border border-kana-border bg-kana-bg-light/30 cursor-pointer transition-all duration-150 active:scale-95"
+                      onClick={() => setRefOverlay(item)}
                     >
                       <div className="text-[28px] font-serif-jp leading-none mb-1.5">{item.char}</div>
                       <div className="text-[11px] font-mono text-kana-muted tracking-[1px]">{item.romaji}</div>
@@ -591,7 +595,8 @@ export default function JapaneseQuiz() {
                   {(scriptType === "hiragana" ? HIRAGANA : KATAKANA).slice(46).map((item, i) => (
                     <div
                       key={i}
-                      className="flex flex-col items-center py-3 px-1 rounded-[2px] border border-kana-border bg-kana-bg-light/30"
+                      className="flex flex-col items-center py-3 px-1 rounded-[2px] border border-kana-border bg-kana-bg-light/30 cursor-pointer transition-all duration-150 active:scale-95"
+                      onClick={() => setRefOverlay(item)}
                     >
                       <div className="text-[28px] font-serif-jp leading-none mb-1.5">{item.char}</div>
                       <div className="text-[11px] font-mono text-kana-muted tracking-[1px]">{item.romaji}</div>
@@ -607,6 +612,23 @@ export default function JapaneseQuiz() {
             >
               Start Quiz
             </button>
+
+            {/* Zoom overlay */}
+            {refOverlay && (
+              <div
+                className="fixed inset-0 z-50 flex items-center justify-center animate-ref-overlay-in"
+                onClick={() => setRefOverlay(null)}
+              >
+                <div className="absolute inset-0 bg-kana-bg/80 backdrop-blur-sm" />
+                <div className="relative flex flex-col items-center animate-ref-zoom-in">
+                  <div className="border border-kana-border rounded-[2px] bg-kana-bg px-12 py-10 flex flex-col items-center">
+                    <div className="text-[140px] font-serif-jp leading-none mb-4">{refOverlay.char}</div>
+                    <div className="text-2xl font-mono text-kana-muted tracking-[6px] uppercase">{refOverlay.romaji}</div>
+                  </div>
+                  <div className="text-[10px] text-kana-dim tracking-[3px] font-mono mt-4 uppercase">Tap to close</div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
