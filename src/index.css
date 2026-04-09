@@ -1,95 +1,29 @@
-@import "tailwindcss";
-
-@theme {
-  --color-kana-bg: #1a1a1e;
-  --color-kana-bg-light: #2a2a2e;
-  --color-kana-border: #3a3a3e;
-  --color-kana-border-light: #4a4a4e;
-  --color-kana-primary: #c44438;
-  --color-kana-text: #e8e4df;
-  --color-kana-muted: #8a857e;
-  --color-kana-dim: #6a655e;
-  --color-kana-faint: #4a4a4e;
-  --color-kana-success: #52b788;
-  --color-kana-success-dark: #2d6a4f;
-
-  --font-serif-jp: 'Noto Serif JP', 'Georgia', serif;
-  --font-mono: 'Courier New', monospace;
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-@layer base {
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
-
-  body {
-    background: var(--color-kana-bg);
-  }
-
-  button:hover {
-    filter: brightness(1.15);
-  }
-
-  ::-webkit-scrollbar {
-    width: 4px;
-  }
-  ::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  ::-webkit-scrollbar-thumb {
-    background: var(--color-kana-border);
-    border-radius: 2px;
-  }
+body {
+  background: #1a1a1e;
 }
 
-@keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-6px); }
-  75% { transform: translateX(6px); }
+button {
+  background: none;
+  border: none;
 }
 
-@keyframes fade-up {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+button:hover {
+  filter: brightness(1.15);
 }
 
-@utility animate-shake {
-  animation: shake 0.4s ease;
+::-webkit-scrollbar {
+  width: 4px;
 }
-
-@utility animate-fade-up {
-  animation: fade-up 0.5s ease;
+::-webkit-scrollbar-track {
+  background: transparent;
 }
-
-@utility animate-fade-up-fast {
-  animation: fade-up 0.2s ease;
-}
-
-@keyframes ref-overlay-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes ref-zoom-in {
-  from { opacity: 0; transform: scale(0.6); }
-  to { opacity: 1; transform: scale(1); }
-}
-
-@utility animate-ref-overlay-in {
-  animation: ref-overlay-in 0.2s ease;
-}
-
-@utility animate-ref-zoom-in {
-  animation: ref-zoom-in 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-/* Decorative vertical line gradient */
-@utility vert-line {
-  position: fixed;
-  top: 0;
-  bottom: 0;
-  width: 1px;
-  background: linear-gradient(to bottom, transparent, #c4443820, transparent);
+::-webkit-scrollbar-thumb {
+  background: #3a3a3e;
+  border-radius: 2px;
 }
