@@ -1,9 +1,10 @@
-import { useState, useCallback } from "react";
-import { View, Text, XStack, YStack, styled } from "tamagui";
+// @ts-nocheck — Tamagui 2.0 RC has known type incompatibilities with strict TS
+import { useState, useCallback, useEffect } from "react";
+import { View, Text, XStack, YStack, Button, styled } from "tamagui";
 
 const AnimatedYStack = styled(YStack, {
   transition: "quick",
-});
+} as any);
 
 // ─── Types ───
 
@@ -34,39 +35,151 @@ type Difficulty = "easy" | "medium" | "hard";
 // ─── Data ───
 
 const HIRAGANA: KanaItem[] = [
-  { char: "あ", romaji: "a" }, { char: "い", romaji: "i" }, { char: "う", romaji: "u" }, { char: "え", romaji: "e" }, { char: "お", romaji: "o" },
-  { char: "か", romaji: "ka" }, { char: "き", romaji: "ki" }, { char: "く", romaji: "ku" }, { char: "け", romaji: "ke" }, { char: "こ", romaji: "ko" },
-  { char: "さ", romaji: "sa" }, { char: "し", romaji: "shi" }, { char: "す", romaji: "su" }, { char: "せ", romaji: "se" }, { char: "そ", romaji: "so" },
-  { char: "た", romaji: "ta" }, { char: "ち", romaji: "chi" }, { char: "つ", romaji: "tsu" }, { char: "て", romaji: "te" }, { char: "と", romaji: "to" },
-  { char: "な", romaji: "na" }, { char: "に", romaji: "ni" }, { char: "ぬ", romaji: "nu" }, { char: "ね", romaji: "ne" }, { char: "の", romaji: "no" },
-  { char: "は", romaji: "ha" }, { char: "ひ", romaji: "hi" }, { char: "ふ", romaji: "fu" }, { char: "へ", romaji: "he" }, { char: "ほ", romaji: "ho" },
-  { char: "ま", romaji: "ma" }, { char: "み", romaji: "mi" }, { char: "む", romaji: "mu" }, { char: "め", romaji: "me" }, { char: "も", romaji: "mo" },
-  { char: "や", romaji: "ya" }, { char: "ゆ", romaji: "yu" }, { char: "よ", romaji: "yo" },
-  { char: "ら", romaji: "ra" }, { char: "り", romaji: "ri" }, { char: "る", romaji: "ru" }, { char: "れ", romaji: "re" }, { char: "ろ", romaji: "ro" },
-  { char: "わ", romaji: "wa" }, { char: "を", romaji: "wo" }, { char: "ん", romaji: "n" },
-  { char: "が", romaji: "ga" }, { char: "ぎ", romaji: "gi" }, { char: "ぐ", romaji: "gu" }, { char: "げ", romaji: "ge" }, { char: "ご", romaji: "go" },
-  { char: "ざ", romaji: "za" }, { char: "じ", romaji: "ji" }, { char: "ず", romaji: "zu" }, { char: "ぜ", romaji: "ze" }, { char: "ぞ", romaji: "zo" },
-  { char: "だ", romaji: "da" }, { char: "ぢ", romaji: "di" }, { char: "づ", romaji: "du" }, { char: "で", romaji: "de" }, { char: "ど", romaji: "do" },
-  { char: "ば", romaji: "ba" }, { char: "び", romaji: "bi" }, { char: "ぶ", romaji: "bu" }, { char: "べ", romaji: "be" }, { char: "ぼ", romaji: "bo" },
-  { char: "ぱ", romaji: "pa" }, { char: "ぴ", romaji: "pi" }, { char: "ぷ", romaji: "pu" }, { char: "ぺ", romaji: "pe" }, { char: "ぽ", romaji: "po" },
+  { char: "あ", romaji: "a" },
+  { char: "い", romaji: "i" },
+  { char: "う", romaji: "u" },
+  { char: "え", romaji: "e" },
+  { char: "お", romaji: "o" },
+  { char: "か", romaji: "ka" },
+  { char: "き", romaji: "ki" },
+  { char: "く", romaji: "ku" },
+  { char: "け", romaji: "ke" },
+  { char: "こ", romaji: "ko" },
+  { char: "さ", romaji: "sa" },
+  { char: "し", romaji: "shi" },
+  { char: "す", romaji: "su" },
+  { char: "せ", romaji: "se" },
+  { char: "そ", romaji: "so" },
+  { char: "た", romaji: "ta" },
+  { char: "ち", romaji: "chi" },
+  { char: "つ", romaji: "tsu" },
+  { char: "て", romaji: "te" },
+  { char: "と", romaji: "to" },
+  { char: "な", romaji: "na" },
+  { char: "に", romaji: "ni" },
+  { char: "ぬ", romaji: "nu" },
+  { char: "ね", romaji: "ne" },
+  { char: "の", romaji: "no" },
+  { char: "は", romaji: "ha" },
+  { char: "ひ", romaji: "hi" },
+  { char: "ふ", romaji: "fu" },
+  { char: "へ", romaji: "he" },
+  { char: "ほ", romaji: "ho" },
+  { char: "ま", romaji: "ma" },
+  { char: "み", romaji: "mi" },
+  { char: "む", romaji: "mu" },
+  { char: "め", romaji: "me" },
+  { char: "も", romaji: "mo" },
+  { char: "や", romaji: "ya" },
+  { char: "ゆ", romaji: "yu" },
+  { char: "よ", romaji: "yo" },
+  { char: "ら", romaji: "ra" },
+  { char: "り", romaji: "ri" },
+  { char: "る", romaji: "ru" },
+  { char: "れ", romaji: "re" },
+  { char: "ろ", romaji: "ro" },
+  { char: "わ", romaji: "wa" },
+  { char: "を", romaji: "wo" },
+  { char: "ん", romaji: "n" },
+  { char: "が", romaji: "ga" },
+  { char: "ぎ", romaji: "gi" },
+  { char: "ぐ", romaji: "gu" },
+  { char: "げ", romaji: "ge" },
+  { char: "ご", romaji: "go" },
+  { char: "ざ", romaji: "za" },
+  { char: "じ", romaji: "ji" },
+  { char: "ず", romaji: "zu" },
+  { char: "ぜ", romaji: "ze" },
+  { char: "ぞ", romaji: "zo" },
+  { char: "だ", romaji: "da" },
+  { char: "ぢ", romaji: "di" },
+  { char: "づ", romaji: "du" },
+  { char: "で", romaji: "de" },
+  { char: "ど", romaji: "do" },
+  { char: "ば", romaji: "ba" },
+  { char: "び", romaji: "bi" },
+  { char: "ぶ", romaji: "bu" },
+  { char: "べ", romaji: "be" },
+  { char: "ぼ", romaji: "bo" },
+  { char: "ぱ", romaji: "pa" },
+  { char: "ぴ", romaji: "pi" },
+  { char: "ぷ", romaji: "pu" },
+  { char: "ぺ", romaji: "pe" },
+  { char: "ぽ", romaji: "po" },
 ];
 
 const KATAKANA: KanaItem[] = [
-  { char: "ア", romaji: "a" }, { char: "イ", romaji: "i" }, { char: "ウ", romaji: "u" }, { char: "エ", romaji: "e" }, { char: "オ", romaji: "o" },
-  { char: "カ", romaji: "ka" }, { char: "キ", romaji: "ki" }, { char: "ク", romaji: "ku" }, { char: "ケ", romaji: "ke" }, { char: "コ", romaji: "ko" },
-  { char: "サ", romaji: "sa" }, { char: "シ", romaji: "shi" }, { char: "ス", romaji: "su" }, { char: "セ", romaji: "se" }, { char: "ソ", romaji: "so" },
-  { char: "タ", romaji: "ta" }, { char: "チ", romaji: "chi" }, { char: "ツ", romaji: "tsu" }, { char: "テ", romaji: "te" }, { char: "ト", romaji: "to" },
-  { char: "ナ", romaji: "na" }, { char: "ニ", romaji: "ni" }, { char: "ヌ", romaji: "nu" }, { char: "ネ", romaji: "ne" }, { char: "ノ", romaji: "no" },
-  { char: "ハ", romaji: "ha" }, { char: "ヒ", romaji: "hi" }, { char: "フ", romaji: "fu" }, { char: "ヘ", romaji: "he" }, { char: "ホ", romaji: "ho" },
-  { char: "マ", romaji: "ma" }, { char: "ミ", romaji: "mi" }, { char: "ム", romaji: "mu" }, { char: "メ", romaji: "me" }, { char: "モ", romaji: "mo" },
-  { char: "ヤ", romaji: "ya" }, { char: "ユ", romaji: "yu" }, { char: "ヨ", romaji: "yo" },
-  { char: "ラ", romaji: "ra" }, { char: "リ", romaji: "ri" }, { char: "ル", romaji: "ru" }, { char: "レ", romaji: "re" }, { char: "ロ", romaji: "ro" },
-  { char: "ワ", romaji: "wa" }, { char: "ヲ", romaji: "wo" }, { char: "ン", romaji: "n" },
-  { char: "ガ", romaji: "ga" }, { char: "ギ", romaji: "gi" }, { char: "グ", romaji: "gu" }, { char: "ゲ", romaji: "ge" }, { char: "ゴ", romaji: "go" },
-  { char: "ザ", romaji: "za" }, { char: "ジ", romaji: "ji" }, { char: "ズ", romaji: "zu" }, { char: "ゼ", romaji: "ze" }, { char: "ゾ", romaji: "zo" },
-  { char: "ダ", romaji: "da" }, { char: "ヂ", romaji: "di" }, { char: "ヅ", romaji: "du" }, { char: "デ", romaji: "de" }, { char: "ド", romaji: "do" },
-  { char: "バ", romaji: "ba" }, { char: "ビ", romaji: "bi" }, { char: "ブ", romaji: "bu" }, { char: "ベ", romaji: "be" }, { char: "ボ", romaji: "bo" },
-  { char: "パ", romaji: "pa" }, { char: "ピ", romaji: "pi" }, { char: "プ", romaji: "pu" }, { char: "ペ", romaji: "pe" }, { char: "ポ", romaji: "po" },
+  { char: "ア", romaji: "a" },
+  { char: "イ", romaji: "i" },
+  { char: "ウ", romaji: "u" },
+  { char: "エ", romaji: "e" },
+  { char: "オ", romaji: "o" },
+  { char: "カ", romaji: "ka" },
+  { char: "キ", romaji: "ki" },
+  { char: "ク", romaji: "ku" },
+  { char: "ケ", romaji: "ke" },
+  { char: "コ", romaji: "ko" },
+  { char: "サ", romaji: "sa" },
+  { char: "シ", romaji: "shi" },
+  { char: "ス", romaji: "su" },
+  { char: "セ", romaji: "se" },
+  { char: "ソ", romaji: "so" },
+  { char: "タ", romaji: "ta" },
+  { char: "チ", romaji: "chi" },
+  { char: "ツ", romaji: "tsu" },
+  { char: "テ", romaji: "te" },
+  { char: "ト", romaji: "to" },
+  { char: "ナ", romaji: "na" },
+  { char: "ニ", romaji: "ni" },
+  { char: "ヌ", romaji: "nu" },
+  { char: "ネ", romaji: "ne" },
+  { char: "ノ", romaji: "no" },
+  { char: "ハ", romaji: "ha" },
+  { char: "ヒ", romaji: "hi" },
+  { char: "フ", romaji: "fu" },
+  { char: "ヘ", romaji: "he" },
+  { char: "ホ", romaji: "ho" },
+  { char: "マ", romaji: "ma" },
+  { char: "ミ", romaji: "mi" },
+  { char: "ム", romaji: "mu" },
+  { char: "メ", romaji: "me" },
+  { char: "モ", romaji: "mo" },
+  { char: "ヤ", romaji: "ya" },
+  { char: "ユ", romaji: "yu" },
+  { char: "ヨ", romaji: "yo" },
+  { char: "ラ", romaji: "ra" },
+  { char: "リ", romaji: "ri" },
+  { char: "ル", romaji: "ru" },
+  { char: "レ", romaji: "re" },
+  { char: "ロ", romaji: "ro" },
+  { char: "ワ", romaji: "wa" },
+  { char: "ヲ", romaji: "wo" },
+  { char: "ン", romaji: "n" },
+  { char: "ガ", romaji: "ga" },
+  { char: "ギ", romaji: "gi" },
+  { char: "グ", romaji: "gu" },
+  { char: "ゲ", romaji: "ge" },
+  { char: "ゴ", romaji: "go" },
+  { char: "ザ", romaji: "za" },
+  { char: "ジ", romaji: "ji" },
+  { char: "ズ", romaji: "zu" },
+  { char: "ゼ", romaji: "ze" },
+  { char: "ゾ", romaji: "zo" },
+  { char: "ダ", romaji: "da" },
+  { char: "ヂ", romaji: "di" },
+  { char: "ヅ", romaji: "du" },
+  { char: "デ", romaji: "de" },
+  { char: "ド", romaji: "do" },
+  { char: "バ", romaji: "ba" },
+  { char: "ビ", romaji: "bi" },
+  { char: "ブ", romaji: "bu" },
+  { char: "ベ", romaji: "be" },
+  { char: "ボ", romaji: "bo" },
+  { char: "パ", romaji: "pa" },
+  { char: "ピ", romaji: "pi" },
+  { char: "プ", romaji: "pu" },
+  { char: "ペ", romaji: "pe" },
+  { char: "ポ", romaji: "po" },
 ];
 
 // ─── Helpers ───
@@ -87,7 +200,11 @@ const MODES = {
 
 type Mode = (typeof MODES)[keyof typeof MODES];
 
-const generateOptions = (correct: KanaItem, pool: KanaItem[], count = 4): KanaItem[] => {
+const generateOptions = (
+  correct: KanaItem,
+  pool: KanaItem[],
+  count = 4,
+): KanaItem[] => {
   const options: KanaItem[] = [correct];
   const filtered = pool.filter((item) => item.romaji !== correct.romaji);
   const shuffled = shuffle(filtered);
@@ -101,7 +218,9 @@ const generateOptions = (correct: KanaItem, pool: KanaItem[], count = 4): KanaIt
 
 // ─── Colors ───
 
-const C = {
+type ThemeMode = "dark" | "light";
+
+const DARK = {
   bg: "#1a1a1e",
   bgLight: "#2a2a2e",
   border: "#3a3a3e",
@@ -113,16 +232,45 @@ const C = {
   faint: "#4a4a4e",
   success: "#52b788",
   successDark: "#2d6a4f",
+  overlayBg: "rgba(26,26,30,0.8)",
+  refCardBg: "rgba(42,42,46,0.3)",
+  checkboxActiveBg: "rgba(196,68,56,0.06)",
+  checkboxActiveBorder: "rgba(196,68,56,0.25)",
+  streakBg: "rgba(196,68,56,0.13)",
+  correctBg: "rgba(45,106,79,0.08)",
+  wrongBg: "rgba(196,68,56,0.08)",
 } as const;
+
+const LIGHT = {
+  bg: "#f5f2ed",
+  bgLight: "#e8e4df",
+  border: "#d0cbc4",
+  borderLight: "#bab5ae",
+  primary: "#c44438",
+  text: "#2a2420",
+  muted: "#6a655e",
+  dim: "#8a857e",
+  faint: "#bab5ae",
+  success: "#2d8a63",
+  successDark: "#1e6b4a",
+  overlayBg: "rgba(245,242,237,0.85)",
+  refCardBg: "rgba(232,228,223,0.5)",
+  checkboxActiveBg: "rgba(196,68,56,0.08)",
+  checkboxActiveBorder: "rgba(196,68,56,0.3)",
+  streakBg: "rgba(196,68,56,0.1)",
+  correctBg: "rgba(45,138,99,0.1)",
+  wrongBg: "rgba(196,68,56,0.1)",
+} as const;
+
+const getColors = (theme: ThemeMode) => (theme === "dark" ? DARK : LIGHT);
 
 // ─── Styled Components ───
 
 const ScreenContainer = styled(YStack, {
-  minHeight: "100vh" as any,
-  backgroundColor: C.bg,
+  minHeight: "100vh",
   position: "relative",
   overflow: "hidden",
-});
+} as any);
 
 const ContentWrap = styled(YStack, {
   maxWidth: 560,
@@ -132,54 +280,29 @@ const ContentWrap = styled(YStack, {
   position: "relative",
   zIndex: 10,
   width: "100%",
-});
+} as any);
 
 const Label = styled(Text, {
   fontSize: 10,
   letterSpacing: 4,
   textTransform: "uppercase",
-  color: C.dim,
   fontFamily: "$mono",
   marginBottom: 12,
-});
-
-const Btn = styled(View, {
-  width: "100%",
-  alignItems: "center",
-  justifyContent: "center",
-  borderRadius: 2,
-  cursor: "pointer",
-  hoverStyle: { opacity: 0.85 },
-  pressStyle: { opacity: 0.9 },
-  variants: {
-    kind: {
-      primary: { backgroundColor: C.primary, paddingVertical: 18 },
-      outline: { backgroundColor: "transparent", borderWidth: 1, borderColor: C.primary, paddingVertical: 18 },
-      muted: { backgroundColor: "transparent", borderWidth: 1, borderColor: C.border, paddingVertical: 14 },
-    },
-  } as const,
-  defaultVariants: { kind: "primary" },
-});
-
-const BtnLabel = styled(Text, {
-  fontFamily: "$mono",
-  textTransform: "uppercase",
-  variants: {
-    kind: {
-      primary: { fontSize: 15, letterSpacing: 3, color: "white" },
-      outline: { fontSize: 15, letterSpacing: 3, color: C.primary },
-      outlineSm: { fontSize: 12, letterSpacing: 4, color: C.primary },
-      muted: { fontSize: 13, letterSpacing: 3, color: C.muted },
-    },
-  } as const,
-  defaultVariants: { kind: "primary" },
-});
+} as any);
 
 // ─── Subcomponents ───
 
 function InkSplatter({ style }: { style?: React.CSSProperties }) {
   return (
-    <svg viewBox="0 0 200 200" style={{ position: "absolute", opacity: 0.03, pointerEvents: "none", ...style }}>
+    <svg
+      viewBox="0 0 200 200"
+      style={{
+        position: "absolute",
+        opacity: 0.03,
+        pointerEvents: "none",
+        ...style,
+      }}
+    >
       <circle cx="100" cy="100" r="80" fill="currentColor" />
       <circle cx="60" cy="50" r="30" fill="currentColor" />
       <circle cx="150" cy="60" r="25" fill="currentColor" />
@@ -189,7 +312,15 @@ function InkSplatter({ style }: { style?: React.CSSProperties }) {
   );
 }
 
-function VertLine({ left, right }: { left?: string; right?: string }) {
+function VertLine({
+  left,
+  right,
+  color = "#c4443820",
+}: {
+  left?: string;
+  right?: string;
+  color?: string;
+}) {
   return (
     <div
       style={{
@@ -199,7 +330,7 @@ function VertLine({ left, right }: { left?: string; right?: string }) {
         width: 1,
         left,
         right,
-        background: "linear-gradient(to bottom, transparent, #c4443820, transparent)",
+        background: `linear-gradient(to bottom, transparent, ${color}, transparent)`,
       }}
     />
   );
@@ -208,6 +339,25 @@ function VertLine({ left, right }: { left?: string; right?: string }) {
 // ─── Main Component ───
 
 export default function JapaneseQuiz() {
+  const [themeMode, setThemeMode] = useState<ThemeMode>(() => {
+    try {
+      return (localStorage.getItem("kana-theme") as ThemeMode) || "dark";
+    } catch {
+      return "dark";
+    }
+  });
+  const C = getColors(themeMode);
+
+  useEffect(() => {
+    document.body.style.background = C.bg;
+    try {
+      localStorage.setItem("kana-theme", themeMode);
+    } catch {}
+  }, [themeMode, C.bg]);
+
+  const toggleTheme = () =>
+    setThemeMode((t) => (t === "dark" ? "light" : "dark"));
+
   const [screen, setScreen] = useState<Screen>("home");
   const [scriptType, setScriptType] = useState<ScriptType>("hiragana");
   const [mode, setMode] = useState<Mode>(MODES.CHAR_TO_ROMAJI);
@@ -234,6 +384,54 @@ export default function JapaneseQuiz() {
   const [refOverlay, setRefOverlay] = useState<KanaItem | null>(null);
 
   const TOTAL_QUESTIONS = 15;
+
+  // Theme-aware button props
+  const btnProps = (kind: "primary" | "outline" | "outlineSm" | "muted") => ({
+    width: "100%" as any,
+    borderRadius: 2,
+    fontFamily: "$mono" as const,
+    textTransform: "uppercase" as const,
+    hoverStyle: { opacity: 0.85 },
+    pressStyle: { opacity: 0.9 },
+    ...(kind === "primary"
+      ? {
+          backgroundColor: C.primary,
+          paddingVertical: 18,
+          fontSize: 15,
+          letterSpacing: 3,
+          color: "white" as const,
+          borderWidth: 0,
+        }
+      : kind === "outline"
+        ? {
+            backgroundColor: "transparent",
+            borderWidth: 1,
+            borderColor: C.primary,
+            paddingVertical: 18,
+            fontSize: 15,
+            letterSpacing: 3,
+            color: C.primary,
+          }
+        : kind === "outlineSm"
+          ? {
+              backgroundColor: "transparent",
+              borderWidth: 1,
+              borderColor: C.primary,
+              paddingVertical: 18,
+              fontSize: 12,
+              letterSpacing: 4,
+              color: C.primary,
+            }
+          : {
+              backgroundColor: "transparent",
+              borderWidth: 1,
+              borderColor: C.border,
+              paddingVertical: 14,
+              fontSize: 13,
+              letterSpacing: 3,
+              color: C.muted,
+            }),
+  });
 
   const getPool = useCallback((): KanaItem[] => {
     const source = scriptType === "hiragana" ? HIRAGANA : KATAKANA;
@@ -273,8 +471,10 @@ export default function JapaneseQuiz() {
       setPracticeDeck((prev) => {
         const updated = prev.map((c) => {
           if (c.char !== current.char) return c;
-          if (difficulty === "easy") return { ...c, weight: Math.max(0.2, c.weight * 0.5) };
-          if (difficulty === "hard") return { ...c, weight: Math.min(5, c.weight * 2) };
+          if (difficulty === "easy")
+            return { ...c, weight: Math.max(0.2, c.weight * 0.5) };
+          if (difficulty === "hard")
+            return { ...c, weight: Math.min(5, c.weight * 2) };
           return c;
         });
         const next = pickNextCard(updated);
@@ -344,28 +544,72 @@ export default function JapaneseQuiz() {
   };
 
   const currentQ = questions[currentIndex];
-  const progress = questions.length > 0 ? ((currentIndex + (answered ? 1 : 0)) / questions.length) * 100 : 0;
+  const progress =
+    questions.length > 0
+      ? ((currentIndex + (answered ? 1 : 0)) / questions.length) * 100
+      : 0;
   const canStart = includeBasic || includeDakuten;
 
   return (
-    <ScreenContainer>
-      <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700&display=swap" rel="stylesheet" />
+    <ScreenContainer backgroundColor={C.bg}>
+      <link
+        href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700&display=swap"
+        rel="stylesheet"
+      />
 
-      <VertLine left="10%" />
-      <VertLine right="10%" />
-      <InkSplatter style={{ top: -40, right: -60, width: 300, color: C.primary }} />
-      <InkSplatter style={{ bottom: -20, left: -40, width: 250, color: C.text }} />
+      <VertLine
+        left="10%"
+        color={themeMode === "dark" ? "#c4443820" : "#c4443812"}
+      />
+      <VertLine
+        right="10%"
+        color={themeMode === "dark" ? "#c4443820" : "#c4443812"}
+      />
+      <InkSplatter
+        style={{ top: -40, right: -60, width: 300, color: C.primary }}
+      />
+      <InkSplatter
+        style={{ bottom: -20, left: -40, width: 250, color: C.text }}
+      />
+
+      {/* Theme toggle */}
+      <Button
+        position="absolute"
+        bottom={24}
+        right={24}
+        zIndex={20}
+        width={36}
+        height={36}
+        padding={0}
+        borderRadius={2}
+        borderWidth={1}
+        borderColor={C.border}
+        backgroundColor="transparent"
+        color={C.muted}
+        fontFamily="$mono"
+        fontSize={11}
+        letterSpacing={2}
+        hoverStyle={{ opacity: 0.85 }}
+        pressStyle={{ opacity: 0.9 }}
+        onPress={toggleTheme}
+      >
+        {themeMode === "dark" ? "☀" : "☾"}
+      </Button>
 
       <ContentWrap>
         {/* ─── HOME ─── */}
         {screen === "home" && (
-          <AnimatedYStack
-            enterStyle={{ opacity: 0, y: 20 }}
-            opacity={1}
-            y={0}
-          >
+          <AnimatedYStack enterStyle={{ opacity: 0, y: 20 }} opacity={1} y={0}>
             <View height={20} />
-            <Text fontSize={14} letterSpacing={6} textTransform="uppercase" color={C.primary} textAlign="center" marginBottom={8} fontFamily="$mono">
+            <Text
+              fontSize={14}
+              letterSpacing={6}
+              textTransform="uppercase"
+              color={C.primary}
+              textAlign="center"
+              marginBottom={8}
+              fontFamily="$mono"
+            >
               日本語 Practice
             </Text>
             <Text
@@ -379,11 +623,17 @@ export default function JapaneseQuiz() {
             >
               {scriptType === "hiragana" ? "あ" : "ア"}
             </Text>
-            <Text fontSize={13} textAlign="center" color={C.muted} marginBottom={40} letterSpacing={2}>
+            <Text
+              fontSize={13}
+              textAlign="center"
+              color={C.muted}
+              marginBottom={40}
+              letterSpacing={2}
+            >
               JAPANESE KANA QUIZ
             </Text>
 
-            <Label>Script</Label>
+            <Label color={C.dim}>Script</Label>
             <XStack gap={8} marginBottom={24}>
               {(["hiragana", "katakana"] as const).map((s) => (
                 <View
@@ -399,41 +649,67 @@ export default function JapaneseQuiz() {
                   onPress={() => setScriptType(s)}
                   hoverStyle={{ opacity: 0.85 }}
                 >
-                  <Text fontSize={13} letterSpacing={1} color={scriptType === s ? "white" : C.muted} fontFamily="$serifJp">
-                    {s === "hiragana" ? "ひらがな Hiragana" : "カタカナ Katakana"}
+                  <Text
+                    fontSize={13}
+                    letterSpacing={1}
+                    color={scriptType === s ? "white" : C.muted}
+                    fontFamily="$serifJp"
+                  >
+                    {s === "hiragana"
+                      ? "ひらがな Hiragana"
+                      : "カタカナ Katakana"}
                   </Text>
                 </View>
               ))}
             </XStack>
 
-            <Label>Quiz Mode</Label>
+            <Label color={C.dim}>Quiz Mode</Label>
             <XStack gap={8} marginBottom={24}>
-              {([MODES.CHAR_TO_ROMAJI, MODES.ROMAJI_TO_CHAR] as const).map((m) => (
-                <View
-                  key={m}
-                  flex={1}
-                  paddingVertical={14}
-                  borderRadius={2}
-                  borderWidth={1}
-                  alignItems="center"
-                  cursor="pointer"
-                  backgroundColor={mode === m ? C.primary : "transparent"}
-                  borderColor={mode === m ? C.primary : C.border}
-                  onPress={() => setMode(m)}
-                  hoverStyle={{ opacity: 0.85 }}
-                >
-                  <Text fontSize={13} letterSpacing={1} color={mode === m ? "white" : C.muted} fontFamily="$serifJp">
-                    {m === MODES.CHAR_TO_ROMAJI ? "あ → Romaji" : "Romaji → あ"}
-                  </Text>
-                </View>
-              ))}
+              {([MODES.CHAR_TO_ROMAJI, MODES.ROMAJI_TO_CHAR] as const).map(
+                (m) => (
+                  <View
+                    key={m}
+                    flex={1}
+                    paddingVertical={14}
+                    borderRadius={2}
+                    borderWidth={1}
+                    alignItems="center"
+                    cursor="pointer"
+                    backgroundColor={mode === m ? C.primary : "transparent"}
+                    borderColor={mode === m ? C.primary : C.border}
+                    onPress={() => setMode(m)}
+                    hoverStyle={{ opacity: 0.85 }}
+                  >
+                    <Text
+                      fontSize={13}
+                      letterSpacing={1}
+                      color={mode === m ? "white" : C.muted}
+                      fontFamily="$serifJp"
+                    >
+                      {m === MODES.CHAR_TO_ROMAJI
+                        ? "あ → Romaji"
+                        : "Romaji → あ"}
+                    </Text>
+                  </View>
+                ),
+              )}
             </XStack>
 
-            <Label>Characters</Label>
-            {([
-              { label: "Basic (46 characters)", value: includeBasic, toggle: () => setIncludeBasic(!includeBasic) },
-              { label: "Dakuten / Handakuten (25 characters)", value: includeDakuten, toggle: () => setIncludeDakuten(!includeDakuten) },
-            ] as const).map((opt) => (
+            <Label color={C.dim}>Characters</Label>
+            {(
+              [
+                {
+                  label: "Basic (46 characters)",
+                  value: includeBasic,
+                  toggle: () => setIncludeBasic(!includeBasic),
+                },
+                {
+                  label: "Dakuten / Handakuten (25 characters)",
+                  value: includeDakuten,
+                  toggle: () => setIncludeDakuten(!includeDakuten),
+                },
+              ] as const
+            ).map((opt) => (
               <View
                 key={opt.label}
                 flexDirection="row"
@@ -445,8 +721,8 @@ export default function JapaneseQuiz() {
                 cursor="pointer"
                 marginBottom={8}
                 borderWidth={1}
-                backgroundColor={opt.value ? "rgba(196,68,56,0.06)" : "transparent"}
-                borderColor={opt.value ? "rgba(196,68,56,0.25)" : C.border}
+                backgroundColor={opt.value ? C.checkboxActiveBg : "transparent"}
+                borderColor={opt.value ? C.checkboxActiveBorder : C.border}
                 onPress={opt.toggle}
               >
                 <View
@@ -458,23 +734,51 @@ export default function JapaneseQuiz() {
                   borderWidth={2}
                   borderColor={opt.value ? C.primary : C.borderLight}
                 >
-                  {opt.value && <Text fontSize={12} color={C.primary}>✓</Text>}
+                  {opt.value && (
+                    <Text fontSize={12} color={C.primary}>
+                      ✓
+                    </Text>
+                  )}
                 </View>
-                <Text fontSize={13} color={opt.value ? C.text : C.dim}>{opt.label}</Text>
+                <Text fontSize={13} color={opt.value ? C.text : C.dim}>
+                  {opt.label}
+                </Text>
               </View>
             ))}
 
-            <Btn kind="primary" marginTop={16} opacity={canStart ? 1 : 0.4} onPress={canStart ? startQuiz : undefined}>
-              <BtnLabel kind="primary">Begin Quiz</BtnLabel>
-            </Btn>
-            <Btn kind="outline" marginTop={10} opacity={canStart ? 1 : 0.4} onPress={canStart ? startPractice : undefined}>
-              <BtnLabel kind="outline">Practice Mode</BtnLabel>
-            </Btn>
-            <Btn kind="muted" marginTop={10} opacity={canStart ? 1 : 0.4} onPress={canStart ? () => setScreen("reference") : undefined}>
-              <BtnLabel kind="muted">Reference</BtnLabel>
-            </Btn>
+            <Button
+              {...btnProps("primary")}
+              marginTop={16}
+              opacity={canStart ? 1 : 0.4}
+              onPress={canStart ? startQuiz : undefined}
+            >
+              Begin Quiz
+            </Button>
+            <Button
+              {...btnProps("outline")}
+              marginTop={10}
+              opacity={canStart ? 1 : 0.4}
+              onPress={canStart ? startPractice : undefined}
+            >
+              Practice Mode
+            </Button>
+            <Button
+              {...btnProps("muted")}
+              marginTop={10}
+              opacity={canStart ? 1 : 0.4}
+              onPress={canStart ? () => setScreen("reference") : undefined}
+            >
+              Reference
+            </Button>
 
-            <Text textAlign="center" marginTop={20} fontSize={11} color={C.faint} letterSpacing={1} fontFamily="$mono">
+            <Text
+              textAlign="center"
+              marginTop={20}
+              fontSize={11}
+              color={C.faint}
+              letterSpacing={1}
+              fontFamily="$mono"
+            >
               {TOTAL_QUESTIONS} questions · multiple choice
             </Text>
           </AnimatedYStack>
@@ -483,19 +787,47 @@ export default function JapaneseQuiz() {
         {/* ─── QUIZ ─── */}
         {screen === "quiz" && currentQ && (
           <YStack>
-            <XStack justifyContent="space-between" alignItems="center" marginBottom={8}>
-              <Text color={C.dim} cursor="pointer" fontSize={12} letterSpacing={2} fontFamily="$mono" paddingVertical={8} onPress={() => setScreen("home")}>
+            <XStack
+              justifyContent="space-between"
+              alignItems="center"
+              marginBottom={8}
+            >
+              <Text
+                color={C.dim}
+                cursor="pointer"
+                fontSize={12}
+                letterSpacing={2}
+                fontFamily="$mono"
+                paddingVertical={8}
+                onPress={() => setScreen("home")}
+              >
                 ← BACK
               </Text>
-              <Text fontSize={11} color={C.dim} letterSpacing={3} fontFamily="$mono">
+              <Text
+                fontSize={11}
+                color={C.dim}
+                letterSpacing={3}
+                fontFamily="$mono"
+              >
                 {currentIndex + 1} / {questions.length}
               </Text>
-              <Text fontSize={11} color={C.primary} letterSpacing={2} fontFamily="$mono">
+              <Text
+                fontSize={11}
+                color={C.primary}
+                letterSpacing={2}
+                fontFamily="$mono"
+              >
                 {score} correct
               </Text>
             </XStack>
 
-            <View height={2} backgroundColor={C.bgLight} borderRadius={1} marginBottom={32} overflow="hidden">
+            <View
+              height={2}
+              backgroundColor={C.bgLight}
+              borderRadius={1}
+              marginBottom={32}
+              overflow="hidden"
+            >
               <View
                 height="100%"
                 backgroundColor={C.primary}
@@ -506,8 +838,15 @@ export default function JapaneseQuiz() {
 
             {streak >= 3 && (
               <XStack justifyContent="center" marginBottom={16}>
-                <View paddingVertical={4} paddingHorizontal={10} backgroundColor="rgba(196,68,56,0.13)" borderRadius={2}>
-                  <Text fontSize={11} color={C.primary} fontFamily="$mono">🔥 {streak} streak</Text>
+                <View
+                  paddingVertical={4}
+                  paddingHorizontal={10}
+                  backgroundColor={C.streakBg}
+                  borderRadius={2}
+                >
+                  <Text fontSize={11} color={C.primary} fontFamily="$mono">
+                    🔥 {streak} streak
+                  </Text>
                 </View>
               </XStack>
             )}
@@ -518,35 +857,69 @@ export default function JapaneseQuiz() {
               opacity={fadeIn ? 1 : 0}
               y={fadeIn ? 0 : 10}
             >
-              <Text fontSize={12} color={C.dim} letterSpacing={2} fontFamily="$mono">
-                {mode === MODES.CHAR_TO_ROMAJI ? "What is the romaji for" : "Which character is"}
+              <Text
+                fontSize={12}
+                color={C.dim}
+                letterSpacing={2}
+                fontFamily="$mono"
+              >
+                {mode === MODES.CHAR_TO_ROMAJI
+                  ? "What is the romaji for"
+                  : "Which character is"}
               </Text>
               {mode === MODES.CHAR_TO_ROMAJI ? (
-                <Text fontSize={140} lineHeight={140} marginTop={16} marginBottom={8} color={C.text} fontFamily="$serifJp">
+                <Text
+                  fontSize={140}
+                  lineHeight={140}
+                  marginTop={16}
+                  marginBottom={8}
+                  color={C.text}
+                  fontFamily="$serifJp"
+                >
                   {currentQ.item.char}
                 </Text>
               ) : (
-                <Text fontSize={48} lineHeight={48} marginTop={16} marginBottom={8} color={C.text} fontFamily="$mono" letterSpacing={6} textTransform="uppercase">
+                <Text
+                  fontSize={48}
+                  lineHeight={48}
+                  marginTop={16}
+                  marginBottom={8}
+                  color={C.text}
+                  fontFamily="$mono"
+                  letterSpacing={6}
+                  textTransform="uppercase"
+                >
                   {currentQ.item.romaji}
                 </Text>
               )}
             </AnimatedYStack>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, opacity: fadeIn ? 1 : 0, transition: "opacity 0.3s" }}>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: 10,
+                opacity: fadeIn ? 1 : 0,
+                transition: "opacity 0.3s",
+              }}
+            >
               {currentQ.options.map((opt, i) => {
                 const isCorrect = opt.romaji === currentQ.item.romaji;
-                const isWrongSelected = selected?.romaji === opt.romaji && selected?.char === opt.char && !isCorrect;
+                const isWrongSelected =
+                  selected?.romaji === opt.romaji &&
+                  selected?.char === opt.char &&
+                  !isCorrect;
                 let bg: string = "transparent";
                 let border: string = C.border;
                 let textColor: string = C.text;
 
                 if (answered) {
                   if (isCorrect) {
-                    bg = "rgba(45,106,79,0.08)";
+                    bg = C.correctBg;
                     border = C.successDark;
                     textColor = C.success;
                   } else if (isWrongSelected) {
-                    bg = "rgba(196,68,56,0.08)";
+                    bg = C.wrongBg;
                     border = C.primary;
                     textColor = C.primary;
                   } else {
@@ -571,7 +944,9 @@ export default function JapaneseQuiz() {
                   >
                     <Text
                       color={textColor as any}
-                      fontFamily={mode === MODES.ROMAJI_TO_CHAR ? "$serifJp" : "$mono"}
+                      fontFamily={
+                        mode === MODES.ROMAJI_TO_CHAR ? "$serifJp" : "$mono"
+                      }
                       fontSize={mode === MODES.ROMAJI_TO_CHAR ? 42 : 16}
                       letterSpacing={mode === MODES.ROMAJI_TO_CHAR ? 0 : 2}
                     >
@@ -583,17 +958,33 @@ export default function JapaneseQuiz() {
             </div>
 
             {answered && (
-              <AnimatedYStack enterStyle={{ opacity: 0, y: 10 }} opacity={1} y={0}>
+              <AnimatedYStack
+                enterStyle={{ opacity: 0, y: 10 }}
+                opacity={1}
+                y={0}
+              >
                 {selected?.romaji !== currentQ.item.romaji && (
-                  <Text textAlign="center" marginTop={16} fontSize={13} color={C.muted}>
-                    Correct answer: <Text color={C.success}>{currentQ.item.char} = {currentQ.item.romaji}</Text>
+                  <Text
+                    textAlign="center"
+                    marginTop={16}
+                    fontSize={13}
+                    color={C.muted}
+                  >
+                    Correct answer:{" "}
+                    <Text color={C.success}>
+                      {currentQ.item.char} = {currentQ.item.romaji}
+                    </Text>
                   </Text>
                 )}
-                <Btn kind="outline" marginTop={20} onPress={nextQuestion}>
-                  <BtnLabel kind="outlineSm">
-                    {currentIndex + 1 >= questions.length ? "See Results" : "Next →"}
-                  </BtnLabel>
-                </Btn>
+                <Button
+                  {...btnProps("outlineSm")}
+                  marginTop={20}
+                  onPress={nextQuestion}
+                >
+                  {currentIndex + 1 >= questions.length
+                    ? "See Results"
+                    : "Next →"}
+                </Button>
               </AnimatedYStack>
             )}
           </YStack>
@@ -602,19 +993,45 @@ export default function JapaneseQuiz() {
         {/* ─── PRACTICE ─── */}
         {screen === "practice" && practiceDeck.length > 0 && (
           <YStack>
-            <XStack justifyContent="space-between" alignItems="center" marginBottom={8}>
-              <Text color={C.dim} cursor="pointer" fontSize={12} letterSpacing={2} fontFamily="$mono" paddingVertical={8} onPress={() => setScreen("home")}>
+            <XStack
+              justifyContent="space-between"
+              alignItems="center"
+              marginBottom={8}
+            >
+              <Text
+                color={C.dim}
+                cursor="pointer"
+                fontSize={12}
+                letterSpacing={2}
+                fontFamily="$mono"
+                paddingVertical={8}
+                onPress={() => setScreen("home")}
+              >
                 ← BACK
               </Text>
-              <Text fontSize={11} color={C.primary} letterSpacing={3} fontFamily="$mono" textTransform="uppercase">
+              <Text
+                fontSize={11}
+                color={C.primary}
+                letterSpacing={3}
+                fontFamily="$mono"
+                textTransform="uppercase"
+              >
                 Practice
               </Text>
-              <Text fontSize={11} color={C.dim} letterSpacing={2} fontFamily="$mono">
+              <Text
+                fontSize={11}
+                color={C.dim}
+                letterSpacing={2}
+                fontFamily="$mono"
+              >
                 {practiceCount} reviewed
               </Text>
             </XStack>
 
-            <AnimatedYStack opacity={practiceFade ? 1 : 0} y={practiceFade ? 0 : 10}>
+            <AnimatedYStack
+              opacity={practiceFade ? 1 : 0}
+              y={practiceFade ? 0 : 10}
+            >
               <View
                 marginTop={32}
                 marginBottom={24}
@@ -625,10 +1042,22 @@ export default function JapaneseQuiz() {
                 onPress={() => setPracticeRevealed(true)}
               >
                 <YStack paddingVertical={40} alignItems="center">
-                  <Text fontSize={10} letterSpacing={4} textTransform="uppercase" color={C.dim} marginBottom={8} fontFamily="$mono">
+                  <Text
+                    fontSize={10}
+                    letterSpacing={4}
+                    textTransform="uppercase"
+                    color={C.dim}
+                    marginBottom={8}
+                    fontFamily="$mono"
+                  >
                     {practiceRevealed ? "Answer" : "Tap to reveal"}
                   </Text>
-                  <Text fontSize={120} lineHeight={120} color={C.text} fontFamily="$serifJp">
+                  <Text
+                    fontSize={120}
+                    lineHeight={120}
+                    color={C.text}
+                    fontFamily="$serifJp"
+                  >
                     {practiceDeck[0]!.char}
                   </Text>
                 </YStack>
@@ -641,36 +1070,84 @@ export default function JapaneseQuiz() {
                   alignItems="center"
                   opacity={practiceRevealed ? 1 : 0}
                 >
-                  <Text fontSize={30} fontFamily="$mono" letterSpacing={6} color={C.text} textTransform="uppercase">
+                  <Text
+                    fontSize={30}
+                    fontFamily="$mono"
+                    letterSpacing={6}
+                    color={C.text}
+                    textTransform="uppercase"
+                  >
                     {practiceDeck[0]!.romaji}
                   </Text>
                 </YStack>
               </View>
 
               {practiceRevealed && (
-                <AnimatedYStack enterStyle={{ opacity: 0, y: 10 }} opacity={1} y={0}>
-                  <Text fontSize={10} letterSpacing={4} textTransform="uppercase" color={C.dim} marginBottom={12} fontFamily="$mono" textAlign="center">
+                <AnimatedYStack
+                  enterStyle={{ opacity: 0, y: 10 }}
+                  opacity={1}
+                  y={0}
+                >
+                  <Text
+                    fontSize={10}
+                    letterSpacing={4}
+                    textTransform="uppercase"
+                    color={C.dim}
+                    marginBottom={12}
+                    fontFamily="$mono"
+                    textAlign="center"
+                  >
                     How well did you know it?
                   </Text>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
-                    {([
-                      { d: "hard" as Difficulty, color: C.primary, bg: "rgba(196,68,56,0.08)" },
-                      { d: "medium" as Difficulty, color: C.muted, bg: "transparent" },
-                      { d: "easy" as Difficulty, color: C.success, bg: "rgba(45,106,79,0.08)" },
-                    ]).map(({ d, color, bg }) => (
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "1fr 1fr 1fr",
+                      gap: 10,
+                    }}
+                  >
+                    {[
+                      {
+                        d: "hard" as Difficulty,
+                        color: C.primary,
+                        bg: C.wrongBg,
+                      },
+                      {
+                        d: "medium" as Difficulty,
+                        color: C.muted,
+                        bg: "transparent",
+                      },
+                      {
+                        d: "easy" as Difficulty,
+                        color: C.success,
+                        bg: C.correctBg,
+                      },
+                    ].map(({ d, color, bg }) => (
                       <View
                         key={d}
                         paddingVertical={16}
                         borderRadius={2}
                         borderWidth={1}
-                        borderColor={(d === "medium" ? C.border : d === "hard" ? C.primary : C.successDark) as any}
+                        borderColor={
+                          (d === "medium"
+                            ? C.border
+                            : d === "hard"
+                              ? C.primary
+                              : C.successDark) as any
+                        }
                         backgroundColor={bg as any}
                         alignItems="center"
                         cursor="pointer"
                         onPress={() => ratePractice(d)}
                         hoverStyle={{ opacity: 0.85 }}
                       >
-                        <Text fontSize={12} letterSpacing={3} textTransform="uppercase" fontFamily="$mono" color={color}>
+                        <Text
+                          fontSize={12}
+                          letterSpacing={3}
+                          textTransform="uppercase"
+                          fontFamily="$mono"
+                          color={color}
+                        >
                           {d.charAt(0).toUpperCase() + d.slice(1)}
                         </Text>
                       </View>
@@ -685,72 +1162,136 @@ export default function JapaneseQuiz() {
         {/* ─── REFERENCE ─── */}
         {screen === "reference" && (
           <AnimatedYStack enterStyle={{ opacity: 0, y: 20 }} opacity={1} y={0}>
-            <XStack justifyContent="space-between" alignItems="center" marginBottom={24}>
-              <Text color={C.dim} cursor="pointer" fontSize={12} letterSpacing={2} fontFamily="$mono" paddingVertical={8} onPress={() => setScreen("home")}>
+            <XStack
+              justifyContent="space-between"
+              alignItems="center"
+              marginBottom={24}
+            >
+              <Text
+                color={C.dim}
+                cursor="pointer"
+                fontSize={12}
+                letterSpacing={2}
+                fontFamily="$mono"
+                paddingVertical={8}
+                onPress={() => setScreen("home")}
+              >
                 ← BACK
               </Text>
-              <Text fontSize={11} color={C.primary} letterSpacing={3} fontFamily="$mono" textTransform="uppercase">
+              <Text
+                fontSize={11}
+                color={C.primary}
+                letterSpacing={3}
+                fontFamily="$mono"
+                textTransform="uppercase"
+              >
                 {scriptType === "hiragana" ? "ひらがな" : "カタカナ"} Reference
               </Text>
             </XStack>
 
             {includeBasic && (
               <>
-                <Label>Basic Characters</Label>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 6, marginBottom: 24 }}>
-                  {(scriptType === "hiragana" ? HIRAGANA : KATAKANA).slice(0, 46).map((item, i) => (
-                    <View
-                      key={i}
-                      flexDirection="column"
-                      alignItems="center"
-                      paddingVertical={12}
-                      paddingHorizontal={4}
-                      borderRadius={2}
-                      borderWidth={1}
-                      borderColor={C.border}
-                      backgroundColor="rgba(42,42,46,0.3)"
-                      cursor="pointer"
-                      onPress={() => setRefOverlay(item)}
-                      pressStyle={{ scale: 0.95 }}
-                    >
-                      <Text fontSize={28} fontFamily="$serifJp" lineHeight={28} marginBottom={6}>{item.char}</Text>
-                      <Text fontSize={11} fontFamily="$mono" color={C.muted} letterSpacing={1}>{item.romaji}</Text>
-                    </View>
-                  ))}
+                <Label color={C.dim}>Basic Characters</Label>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(5, 1fr)",
+                    gap: 6,
+                    marginBottom: 24,
+                  }}
+                >
+                  {(scriptType === "hiragana" ? HIRAGANA : KATAKANA)
+                    .slice(0, 46)
+                    .map((item, i) => (
+                      <View
+                        key={i}
+                        flexDirection="column"
+                        alignItems="center"
+                        paddingVertical={12}
+                        paddingHorizontal={4}
+                        borderRadius={2}
+                        borderWidth={1}
+                        borderColor={C.border}
+                        backgroundColor={C.refCardBg}
+                        cursor="pointer"
+                        onPress={() => setRefOverlay(item)}
+                        pressStyle={{ scale: 0.95 }}
+                      >
+                        <Text
+                          fontSize={28}
+                          fontFamily="$serifJp"
+                          lineHeight={28}
+                          marginBottom={6}
+                        >
+                          {item.char}
+                        </Text>
+                        <Text
+                          fontSize={11}
+                          fontFamily="$mono"
+                          color={C.muted}
+                          letterSpacing={1}
+                        >
+                          {item.romaji}
+                        </Text>
+                      </View>
+                    ))}
                 </div>
               </>
             )}
 
             {includeDakuten && (
               <>
-                <Label>Dakuten / Handakuten</Label>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 6, marginBottom: 24 }}>
-                  {(scriptType === "hiragana" ? HIRAGANA : KATAKANA).slice(46).map((item, i) => (
-                    <View
-                      key={i}
-                      flexDirection="column"
-                      alignItems="center"
-                      paddingVertical={12}
-                      paddingHorizontal={4}
-                      borderRadius={2}
-                      borderWidth={1}
-                      borderColor={C.border}
-                      backgroundColor="rgba(42,42,46,0.3)"
-                      cursor="pointer"
-                      onPress={() => setRefOverlay(item)}
-                      pressStyle={{ scale: 0.95 }}
-                    >
-                      <Text fontSize={28} fontFamily="$serifJp" lineHeight={28} marginBottom={6}>{item.char}</Text>
-                      <Text fontSize={11} fontFamily="$mono" color={C.muted} letterSpacing={1}>{item.romaji}</Text>
-                    </View>
-                  ))}
+                <Label color={C.dim}>Dakuten / Handakuten</Label>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(5, 1fr)",
+                    gap: 6,
+                    marginBottom: 24,
+                  }}
+                >
+                  {(scriptType === "hiragana" ? HIRAGANA : KATAKANA)
+                    .slice(46)
+                    .map((item, i) => (
+                      <View
+                        key={i}
+                        flexDirection="column"
+                        alignItems="center"
+                        paddingVertical={12}
+                        paddingHorizontal={4}
+                        borderRadius={2}
+                        borderWidth={1}
+                        borderColor={C.border}
+                        backgroundColor={C.refCardBg}
+                        cursor="pointer"
+                        onPress={() => setRefOverlay(item)}
+                        pressStyle={{ scale: 0.95 }}
+                      >
+                        <Text
+                          fontSize={28}
+                          fontFamily="$serifJp"
+                          lineHeight={28}
+                          marginBottom={6}
+                        >
+                          {item.char}
+                        </Text>
+                        <Text
+                          fontSize={11}
+                          fontFamily="$mono"
+                          color={C.muted}
+                          letterSpacing={1}
+                        >
+                          {item.romaji}
+                        </Text>
+                      </View>
+                    ))}
                 </div>
               </>
             )}
 
-            <Btn kind="primary" onPress={startQuiz}>
-              <BtnLabel kind="primary">Start Quiz</BtnLabel>
-            </Btn>
+            <Button {...btnProps("primary")} onPress={startQuiz}>
+              Start Quiz
+            </Button>
 
             {/* Zoom overlay */}
             {refOverlay && (
@@ -766,7 +1307,14 @@ export default function JapaneseQuiz() {
                 }}
                 onClick={() => setRefOverlay(null)}
               >
-                <div style={{ position: "absolute", inset: 0, background: "rgba(26,26,30,0.8)", backdropFilter: "blur(4px)" }} />
+                <div
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    background: C.overlayBg,
+                    backdropFilter: "blur(4px)",
+                  }}
+                />
                 <AnimatedYStack
                   alignItems="center"
                   enterStyle={{ opacity: 0, scale: 0.6 }}
@@ -783,10 +1331,34 @@ export default function JapaneseQuiz() {
                     paddingVertical={40}
                     alignItems="center"
                   >
-                    <Text fontSize={140} fontFamily="$serifJp" lineHeight={140} marginBottom={16}>{refOverlay.char}</Text>
-                    <Text fontSize={24} fontFamily="$mono" color={C.muted} letterSpacing={6} textTransform="uppercase">{refOverlay.romaji}</Text>
+                    <Text
+                      fontSize={140}
+                      fontFamily="$serifJp"
+                      lineHeight={140}
+                      marginBottom={16}
+                    >
+                      {refOverlay.char}
+                    </Text>
+                    <Text
+                      fontSize={24}
+                      fontFamily="$mono"
+                      color={C.muted}
+                      letterSpacing={6}
+                      textTransform="uppercase"
+                    >
+                      {refOverlay.romaji}
+                    </Text>
                   </YStack>
-                  <Text fontSize={10} color={C.dim} letterSpacing={3} fontFamily="$mono" marginTop={16} textTransform="uppercase">Tap to close</Text>
+                  <Text
+                    fontSize={10}
+                    color={C.dim}
+                    letterSpacing={3}
+                    fontFamily="$mono"
+                    marginTop={16}
+                    textTransform="uppercase"
+                  >
+                    Tap to close
+                  </Text>
                 </AnimatedYStack>
               </div>
             )}
@@ -797,38 +1369,117 @@ export default function JapaneseQuiz() {
         {screen === "results" && (
           <AnimatedYStack enterStyle={{ opacity: 0, y: 20 }} opacity={1} y={0}>
             <View height={20} />
-            <Text fontSize={14} letterSpacing={6} textTransform="uppercase" color={C.primary} textAlign="center" marginBottom={8} fontFamily="$mono">
+            <Text
+              fontSize={14}
+              letterSpacing={6}
+              textTransform="uppercase"
+              color={C.primary}
+              textAlign="center"
+              marginBottom={8}
+              fontFamily="$mono"
+            >
               Complete
             </Text>
-            <Text fontSize={72} textAlign="center" color={C.primary} fontFamily="$mono" lineHeight={72} marginTop={20} marginBottom={4}>
+            <Text
+              fontSize={72}
+              textAlign="center"
+              color={C.primary}
+              fontFamily="$mono"
+              lineHeight={72}
+              marginTop={20}
+              marginBottom={4}
+            >
               {Math.round((score / questions.length) * 100)}%
             </Text>
-            <Text fontSize={12} textAlign="center" color={C.dim} letterSpacing={3} fontFamily="$mono" marginBottom={32}>
+            <Text
+              fontSize={12}
+              textAlign="center"
+              color={C.dim}
+              letterSpacing={3}
+              fontFamily="$mono"
+              marginBottom={32}
+            >
               {score} / {questions.length} CORRECT
             </Text>
 
             <XStack justifyContent="center" gap={32} marginBottom={32}>
               <YStack alignItems="center">
-                <Text fontSize={24} color={C.text} fontFamily="$mono">{bestStreak}</Text>
-                <Text fontSize={10} color={C.dim} letterSpacing={2} fontFamily="$mono" marginTop={4}>BEST STREAK</Text>
+                <Text fontSize={24} color={C.text} fontFamily="$mono">
+                  {bestStreak}
+                </Text>
+                <Text
+                  fontSize={10}
+                  color={C.dim}
+                  letterSpacing={2}
+                  fontFamily="$mono"
+                  marginTop={4}
+                >
+                  BEST STREAK
+                </Text>
               </YStack>
               <YStack alignItems="center">
                 <Text fontSize={24} color={C.text} fontFamily="$mono">
-                  {score >= questions.length * 0.9 ? "素晴らしい" : score >= questions.length * 0.7 ? "いいね" : "頑張って"}
+                  {score >= questions.length * 0.9
+                    ? "素晴らしい"
+                    : score >= questions.length * 0.7
+                      ? "いいね"
+                      : "頑張って"}
                 </Text>
-                <Text fontSize={10} color={C.dim} letterSpacing={2} fontFamily="$mono" marginTop={4}>
-                  {score >= questions.length * 0.9 ? "WONDERFUL" : score >= questions.length * 0.7 ? "NICE" : "KEEP GOING"}
+                <Text
+                  fontSize={10}
+                  color={C.dim}
+                  letterSpacing={2}
+                  fontFamily="$mono"
+                  marginTop={4}
+                >
+                  {score >= questions.length * 0.9
+                    ? "WONDERFUL"
+                    : score >= questions.length * 0.7
+                      ? "NICE"
+                      : "KEEP GOING"}
                 </Text>
               </YStack>
             </XStack>
 
-            <Label>Review</Label>
-            <YStack borderWidth={1} borderColor={C.bgLight} borderRadius={2} marginBottom={24}>
+            <Label color={C.dim}>Review</Label>
+            <YStack
+              borderWidth={1}
+              borderColor={C.bgLight}
+              borderRadius={2}
+              marginBottom={24}
+            >
               {history.map((h, i) => (
-                <XStack key={i} alignItems="center" paddingVertical={12} paddingHorizontal={16} borderBottomWidth={1} borderColor={C.bgLight} gap={16}>
-                  <Text fontSize={28} width={48} textAlign="center" fontFamily="$serifJp">{h.item.char}</Text>
-                  <Text fontSize={14} fontFamily="$mono" letterSpacing={2} color={C.muted} flex={1}>{h.item.romaji}</Text>
-                  <Text fontSize={14} fontFamily="$mono" color={h.correct ? C.success : C.primary}>
+                <XStack
+                  key={i}
+                  alignItems="center"
+                  paddingVertical={12}
+                  paddingHorizontal={16}
+                  borderBottomWidth={1}
+                  borderColor={C.bgLight}
+                  gap={16}
+                >
+                  <Text
+                    fontSize={28}
+                    width={48}
+                    textAlign="center"
+                    fontFamily="$serifJp"
+                  >
+                    {h.item.char}
+                  </Text>
+                  <Text
+                    fontSize={14}
+                    fontFamily="$mono"
+                    letterSpacing={2}
+                    color={C.muted}
+                    flex={1}
+                  >
+                    {h.item.romaji}
+                  </Text>
+                  <Text
+                    fontSize={14}
+                    fontFamily="$mono"
+                    color={h.correct ? C.success : C.primary}
+                  >
                     {h.correct ? "✓" : `✗ ${h.selected.romaji}`}
                   </Text>
                 </XStack>
@@ -836,12 +1487,16 @@ export default function JapaneseQuiz() {
             </YStack>
 
             <XStack gap={10}>
-              <Btn kind="outline" flex={1} onPress={() => setScreen("home")}>
-                <BtnLabel kind="outlineSm">Menu</BtnLabel>
-              </Btn>
-              <Btn kind="primary" flex={1} onPress={startQuiz}>
-                <BtnLabel kind="primary">Retry</BtnLabel>
-              </Btn>
+              <Button
+                {...btnProps("outlineSm")}
+                flex={1}
+                onPress={() => setScreen("home")}
+              >
+                Menu
+              </Button>
+              <Button {...btnProps("primary")} flex={1} onPress={startQuiz}>
+                Retry
+              </Button>
             </XStack>
           </AnimatedYStack>
         )}
