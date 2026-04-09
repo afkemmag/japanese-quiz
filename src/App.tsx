@@ -574,10 +574,11 @@ export default function JapaneseQuiz() {
 
       {/* Theme toggle */}
       <Button
-        position="absolute"
+        // @ts-ignore – Tamagui maps this to CSS position:fixed on web
+        position="fixed"
         bottom={24}
         right={24}
-        zIndex={20}
+        zIndex={9999}
         width={36}
         height={36}
         padding={0}
