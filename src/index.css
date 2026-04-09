@@ -6,6 +6,7 @@
 
 body {
   background: #1a1a1e;
+  transition: background 0.3s ease;
 }
 
 button {
