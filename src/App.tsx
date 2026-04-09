@@ -292,13 +292,13 @@ const Label = styled(Text, {
 
 // ─── Subcomponents ───
 
-function InkSplatter({ style }: { style?: React.CSSProperties }) {
+function InkSplatter({ style, opacity = 0.03 }: { style?: React.CSSProperties; opacity?: number }) {
   return (
     <svg
       viewBox="0 0 200 200"
       style={{
         position: "absolute",
-        opacity: 0.03,
+        opacity,
         pointerEvents: "none",
         ...style,
       }}
@@ -567,9 +567,11 @@ export default function JapaneseQuiz() {
       />
       <InkSplatter
         style={{ top: -40, right: -60, width: 300, color: C.primary }}
+        opacity={themeMode === "dark" ? 0.03 : 0.08}
       />
       <InkSplatter
         style={{ bottom: -20, left: -40, width: 250, color: C.text }}
+        opacity={themeMode === "dark" ? 0.03 : 0.08}
       />
 
       {/* Theme toggle */}
@@ -1223,6 +1225,7 @@ export default function JapaneseQuiz() {
                           fontFamily="$serifJp"
                           lineHeight={28}
                           marginBottom={6}
+                          color={C.text}
                         >
                           {item.char}
                         </Text>
@@ -1273,6 +1276,7 @@ export default function JapaneseQuiz() {
                           fontFamily="$serifJp"
                           lineHeight={28}
                           marginBottom={6}
+                          color={C.text}
                         >
                           {item.char}
                         </Text>
@@ -1337,6 +1341,7 @@ export default function JapaneseQuiz() {
                       fontFamily="$serifJp"
                       lineHeight={140}
                       marginBottom={16}
+                      color={C.text}
                     >
                       {refOverlay.char}
                     </Text>
