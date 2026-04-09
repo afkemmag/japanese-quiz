@@ -585,7 +585,7 @@ export default function JapaneseQuiz() {
         borderRadius={2}
         borderWidth={1}
         borderColor={C.border}
-        backgroundColor="transparent"
+        backgroundColor={`${C.bg}88`}
         color={C.muted}
         fontFamily="$mono"
         fontSize={11}
